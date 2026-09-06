@@ -92,7 +92,7 @@ report = {
                     "date": str(d["date"])} for d in (M.get("deviations") or [])],
     "cost": {"wall_minutes": round((t1 - t0).total_seconds() / 60, 3),
              "agent_tokens": 0, "usd_estimate": 0.0},  # filled in by the agent wrapper when one is used
-    "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    "generated_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
 }
 schema = json.load(open("harness/schema/report.schema.json", encoding="utf-8"))
 jsonschema.Draft202012Validator(schema, format_checker=jsonschema.Draft202012Validator.FORMAT_CHECKER).validate(report)

@@ -84,10 +84,16 @@ here) as an argv list with no shell; `{repo_root}` in the argv is replaced by
 the absolute, forward-slashed repository root for the subprocess only, and
 `run_log.json` records the argv as the manifest writes it, so no evidence
 file holds a host path. The container's first stdout line,
-`== git HEAD: <sha>`, is the code SHA the report carries; if that line is
-absent, `run_log.json` is still written (with `code_sha` null and the stage's
-exit code and log) and then the stage stops, so `work/<slug>/` never mixes two
-runs, and no report is written. If the SHA differs from the manifest's
+`== git HEAD: <sha>`, is the code SHA the report carries. The script removes
+any earlier `work/<slug>/results.json` before it starts and writes
+`work/<slug>/run_log.json` exactly once, in a `finally`, after everything
+else: on every stop (a deviation without `approved_by`, a declined checkpoint,
+a non-zero stage exit, a missing `== git HEAD:` line, a stale results file)
+`run_log.json` carries the stop message in `aborted`, `code_sha` null where
+it was never read, and only the stages that ran, and `results.json` is
+absent. So after any run, complete or stopped, `run_log.json`, `logs/*.log`
+and `results.json` under `work/<slug>/` describe that run alone; a report
+is written only after a complete run. If the SHA differs from the manifest's
 `code[].commit`, the difference is an `environment_delta` entry whose
 component starts with `code:`.
 

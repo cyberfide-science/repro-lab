@@ -46,7 +46,7 @@ for d in M["data"]:
     prov.append({"id": d["id"], "uri": d["uri"], "dest": dest,
                  "sha256_expected": d["sha256"], "sha256_actual": h,
                  "bytes": os.path.getsize(dest),
-                 "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                 "fetched_at": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
                  "verified": ok})
     print(f"[fetch_verify] {d['id']}: {os.path.getsize(dest)} bytes, sha256 {'OK' if ok else 'MISMATCH'}")
     if not ok:
