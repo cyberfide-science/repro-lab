@@ -1,7 +1,7 @@
-# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
-# STATUS: candidate. This is the DESIGNATED FALLBACK for the exit criterion.
-# It is attempted ONLY if muzellec-2023-pydeseq2 fails to run untouched. It
-# exists so that outcome needs no new design decision from the executor: the
+# Manifest written 2026-09-06. Claims and tolerances were committed before any run.
+# STATUS: candidate. This is the DESIGNATED FALLBACK for the end-to-end untouched
+# demonstration. It is attempted ONLY if muzellec-2023-pydeseq2 fails to run
+# untouched. It exists so that outcome needs no new design decision at run time: the
 # manifest, the claims and the tolerances are already fixed and committed.
 #
 # Relationship to targets/luecken-2022-scib: same paper, different artefact.
@@ -51,8 +51,8 @@ environment:
     resolve once in the image, dump env-resolved.txt, and treat the resolved
     list as the record of what ran.
 
-    Note for the executor: tests/common.py at cd67913 sets CORES = "1", which
-    agrees with the brief's section 5 instruction to pin OMP_NUM_THREADS,
+    Note: tests/common.py at cd67913 sets CORES = "1", which
+    agrees with the docs/CONVENTIONS.md rule to pin OMP_NUM_THREADS,
     MKL_NUM_THREADS and OPENBLAS_NUM_THREADS to 1 in the image. Set them anyway;
     the package setting its own does not cover BLAS calls made outside it.
 
@@ -70,14 +70,14 @@ data:
   # was scverse/scanpy's main-branch head on 2026-09-06, resolved that day with
   # `gh api repos/scverse/scanpy/commits/main --jq .sha`. It is pinned because the
   # earlier draft cited the moving main branch, which is not a reproducible
-  # reference. If the executor finds different bytes at this SHA, that is a
+  # reference. If different bytes turn up at this SHA, that is a
   # finding about scanpy's hosting, not about scib.
   # NOTE on coverage: registry.yaml at this SHA lists five entries only -
   # burczynski06, moignard15, paul15, pbmc3k, pbmc3k_processed. It does NOT list
   # 10x_pbmc68k_reduced, which is bundled in the scanpy wheel rather than
   # downloaded. So a published sha256 backs the two DOWNLOADED fixtures below;
   # the zarr's integrity rests on the hash of the scanpy wheel that carries it.
-  # Sizes below are content-length values the planner measured with curl -sIL.
+  # Sizes below are content-length values measured on 2026-09-06 with curl -sIL.
   - id: pbmc3k_processed
     uri: https://exampledata.scverse.org/scanpy/pbmc3k.h5ad
     # HTTP 200, Content-Length 24653425.
@@ -115,15 +115,15 @@ data:
 
 claims:
   # Pre-registered 2026-09-06, BEFORE any run. All four values, and the tolerance,
-  # were read first-hand by the planner from the repo at cd67913 via
+  # were read first-hand from the repo at cd67913 via
   # raw.githubusercontent.com.
   # Tolerance provenance: 1e-2 is NOT chosen here. It is the diff the maintainers
   # themselves assert at, and tests/common.py at the same SHA defines the
   # comparison as "assert abs(x - y) <= diff", i.e. ABSOLUTE. That is tolerance
   # source 1 - the authors' own stated precision - and it also settles
   # tolerance_type without guesswork.
-  # These are metrics bounded in [0,1], so absolute is the right type per the
-  # brief's section 4.2 regardless.
+  # These are metrics bounded in [0,1], so absolute is the right type per
+  # docs/CONVENTIONS.md (tolerances) regardless.
   - id: S1
     figure: "n/a - expected value committed in the repo's test suite, not a paper figure"
     panel: null
@@ -207,11 +207,11 @@ notes: >
   their own sha256; and no step needs R, a GPU, or Docker-in-Docker.
 
   This manifest's job in the set is insurance. If muzellec-2023-pydeseq2 runs
-  untouched, this one stays status: candidate and is not attempted in Unit 1.
+  untouched, this one stays status: candidate and is not attempted.
   If PyDESeq2 fails - the most likely cause being its filterwarnings = ["error"]
-  setting tripping on a new transitive dependency - the executor runs this
-  instead, with no new decisions to make, and the exit criterion is still met by
-  a real paper's real code.
+  setting tripping on a new transitive dependency - this one is run
+  instead, with no new decisions to make, and the untouched demonstration is
+  still made with a real paper's real code.
 
   Scope honesty, which the reviewer should hold this to. Passing this suite does
   NOT reproduce the paper's benchmark. The paper's numbers are the 465 rows of
@@ -220,4 +220,4 @@ notes: >
   that attempts those and is expected to fail. What this manifest establishes is
   narrower and should be reported as such: the metrics implementation underneath
   the paper still returns the values its maintainers pinned. Any report that
-  blurs the two would be exactly the overclaim this track is built to prevent.
+  blurs the two would be exactly the overclaim this repo is built to prevent.

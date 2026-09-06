@@ -18,7 +18,7 @@ notes: |
   Run: the authors' own suite, pytest tests/ -q, reported "65 passed in
   55.14s" (out/pytest.xml: tests=65 errors=0 failures=0 skipped=0). No
   DeprecationWarning was promoted to an error by filterwarnings = ["error"];
-  the hazard predicted in the plan did not fire on this resolution.
+  the hazard predicted in the manifest did not fire on this resolution.
   Then extract_results.py (repro-lab's script, public API only) wrote
   out/results.csv:
     P1_log2FoldChange_gene1    0.632812476644658   claim 0.632812315254828, rel diff 2.6e-7, tol 0.02  -> inside
@@ -54,7 +54,7 @@ notes: |
   Bash rewriting /work/... container paths in docker CLI arguments; it is not
   visible inside the container and changes nothing the pipeline does.
 
-  Fresh-clone test (plan step 6 of the executor brief), 2026-09-06, following
+  Fresh-clone test (docs/CONVENTIONS.md, untouched test), 2026-09-06, following
   only README.md: git clone of this repo at 1634a16 into a scratch directory
   outside the tree; run.sh checked out as LF; docker build --no-cache exited
   0 in 56s and produced a new image id sha256:c669b0e4f23ee75c4c45d5eca16abf

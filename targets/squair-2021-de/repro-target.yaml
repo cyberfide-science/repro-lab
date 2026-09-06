@@ -1,9 +1,9 @@
-# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
-# STATUS: deferred. This target is NOT attempted in Unit 1.
-# It fails the brief's section 2 gate: zeros on C2 (no LICENSE in the analysis
-# repo) and C3 (no environment file of any kind), both inside the first four
-# criteria. The brief (section 3.2) reaches the same conclusion and says to keep
-# the manifest as a record of the cost being declined.
+# Manifest written 2026-09-06. Claims and tolerances were committed before any run.
+# STATUS: deferred. This target is NOT attempted.
+# It fails the selection gate in docs/CONVENTIONS.md: zeros on C2 (no LICENSE in
+# the analysis repo) and C3 (no environment file of any kind), both inside the
+# first four criteria. An earlier scoring pass reached the same conclusion; the
+# manifest is kept as a record of the cost being declined.
 # Every value below was read from a source opened on 2026-09-06; the URL or API
 # call is named in the justification or in the comment beside it.
 
@@ -40,10 +40,10 @@ code:
     licence: MIT
   - role: package
     repo: https://github.com/jordansquair/squair_seurat
-    # R/functions/run_DE.R names github.com/jordansquair/Seurat, which the brief
-    # (section 3.2) reports redirects here. The planner did NOT re-verify that
-    # redirect or the SHA this session, because the target is deferred.
-    commit: "<fill: unverified; the Unit 1 brief quotes b25dea94cc572eed07dc191225014865b29aee1e>"
+    # R/functions/run_DE.R names github.com/jordansquair/Seurat, which an earlier
+    # scoring pass reported redirects here. That redirect and the SHA were NOT
+    # re-verified this session, because the target is deferred.
+    commit: "<fill: unverified; an earlier scoring pass quoted b25dea94cc572eed07dc191225014865b29aee1e>"
     licence: GPL-3.0
 
 environment:
@@ -55,7 +55,7 @@ environment:
     .gitignore, R/ and README.md only (verified via the GitHub trees API on
     2026-09-06). Reconstructing the environment means resolving R 4.x plus an
     unpinned GPL-3.0 fork of Seurat. That is exactly the "extra week of
-    environment archaeology" the brief's section 2 exclusion list warns about,
+    environment archaeology" the selection criteria in docs/CONVENTIONS.md warn about,
     and it is the cost being explicitly declined here.
 
 data:
@@ -79,14 +79,14 @@ data:
     size_bytes: "<fill>"
 
 claims:
-  # Pre-registered 2026-09-06, before any run, per brief section 4.2. This target
-  # is not run in Unit 1; the tolerances are fixed now so that if it is ever
+  # Pre-registered 2026-09-06, before any run, per docs/CONVENTIONS.md (tolerances).
+  # This target is not run; the tolerances are fixed now so that if it is ever
   # promoted, they provably predate the first run.
   # Source for all three: the paper's Source Data workbook
-  # 41467_2021_25960_MOESM5_ESM.xlsx (126,498 bytes), which the planner confirmed
+  # 41467_2021_25960_MOESM5_ESM.xlsx (126,498 bytes), which was confirmed
   # is present in the archive returned by
   # https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8479118/supplementaryFiles
-  # on 2026-09-06. The planner LISTED that archive but did NOT open the workbook,
+  # on 2026-09-06. That archive was LISTED but the workbook was NOT opened,
   # so the metric names and values below are honest placeholders, not numbers
   # transcribed from a source. Do not present them as claims until transcribed.
   - figure: "<fill: transcribe from the Source Data workbook before any run>"
@@ -111,13 +111,13 @@ claims:
     tolerance_type: rank-order
     source: 41467_2021_25960_MOESM5_ESM.xlsx (Source Data, PMC8479118)
 
-# Forward-compat with Unit 2 section 7.2. Unit 1 uses only max_download_gb;
-# the brief's section 9.1 fixes it at 5 for this unit.
+# Reserved for the harness; see docs/CONVENTIONS.md. Only max_download_gb is used in
+# this round; docs/CONVENTIONS.md fixes it at 5.
 checkpoints:
   max_download_gb: 5
   max_stage_minutes: 240
 
-# Forward-compat with Unit 2 section 7.2. Empty because nothing was run and
+# Reserved for the harness; see docs/CONVENTIONS.md. Empty because nothing was run and
 # nothing was changed. An entry here needs what / why / approved_by / date.
 deviations: []
 
@@ -128,25 +128,25 @@ selection:
   C4: {score: 2, justification: "41467_2021_25960_MOESM5_ESM.xlsx (126,498 bytes) is in the archive from https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8479118/supplementaryFiles"}
   C5: {score: 2, justification: "Nature Communications 2021; the DOI resolves in Europe PMC as PMC8479118"}
   C6: {score: 1, justification: "skinnider and jordansquair reply as COLLABORATOR on issues 6, 7, 11 and 13 (gh api repos/neurorestore/DE-analysis/issues/<n>/comments) but the latest reply is 2024-06-28, more than a year before 2026-09-06"}
-  C7: {score: 0, justification: "R only, and R/functions/run_DE.R depends on a fork of Seurat at github.com/jordansquair/Seurat (brief section 3.2)"}
+  C7: {score: 0, justification: "R only, and R/functions/run_DE.R depends on a fork of Seurat at github.com/jordansquair/Seurat (per an earlier scoring pass; not re-verified)"}
   C8: {score: 1, justification: "R/functions/datasets.R lists 51 dataset labels and the outer-*.R scripts fan out over all of them; a one-dataset slice is feasible, the published analysis is not. Zenodo record size unverified - zenodo.org returned HTTP 403 to this network on 2026-09-06"}
   total: 8
 
 notes: >
   GATE: FAILS. Total 8, below the threshold of 11, with zeros on C2 and C3 inside
-  the first four criteria. Not attempted in Unit 1.
+  the first four criteria. Not attempted.
 
-  What changed against the brief's section 3.2 scoring. The brief left C1, C4, C6
+  What changed against an earlier scoring pass. That pass left C1, C4, C6
   and C8 as "?" and gave a range of 2-10. All four were closed this session, so
   the total is now a definite 8 - still a fail, but for recorded reasons rather
   than assumed ones. C1 rose from ? to 2 because the paper names GEO GSE165003
   and a Zenodo DOI. C4 rose from ? to 2 because a Source Data workbook exists and
   is downloadable from Europe PMC. C6 is 1: the lab genuinely answers issues, but
   the most recent maintainer reply is over a year old. C8 is 1. C2 also differs in
-  emphasis from the brief: the brief pairs the C2 zero with C7; the operative
+  emphasis from that pass: it pairs the C2 zero with C7; the operative
   second zero is C3, since C7 sits outside the first four criteria.
 
-  Accepted cost if this is ever promoted (the brief suggests Unit 5): an
+  Accepted cost if this is ever promoted: an
   unpinned GPL-3.0 Seurat fork must be built from source, an R environment must
   be reconstructed from nothing, and the redistribution position for a fixed fork
   is legally murky because the analysis repo carries no licence at all.

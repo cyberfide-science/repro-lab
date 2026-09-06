@@ -13,12 +13,12 @@ first_error: |
   inside `mamba env create -f scib-pipeline/envs/scIB-python-paper.yml` at targets/luecken-2022-scib/Dockerfile:15
 data_hashes_verified: n/a (build failed before the run; the 5 GB checkpoint fired on the 20.1 GB figshare record and the user chose to skip the download)
 notes: |
-  Outcome matches the plan's prediction 1 (section 3.1): the pip stage of the
+  Outcome matches the manifest's first predicted error: the pip stage of the
   paper's own environment file fails because GitHub no longer serves the
   unauthenticated git:// protocol. The exact pip line, the clone attempt and
   the refusal are in stdout.txt (the full docker build log, 5.6 KB).
 
-  Finding against prediction 2: the conda solver did NOT fail. mamba 1.5.8 on
+  Finding against the manifest's second predicted error: the conda solver did NOT fail. mamba 1.5.8 on
   conda-forge + bioconda solved python=3.7 with numba<=0.46, scvi=0.6.7,
   r-seurat=3.1.1 etc. in about 33 s and downloaded/extracted the packages
   (including CUDA/cuDNN pulled in by the scvi/tensorflow pins) in about 3.5
@@ -27,8 +27,9 @@ notes: |
   environment.
 
   Not fixed, on purpose: the obvious change (git+https://) is an edit to a
-  file in the paper's repo and is Unit 2's first harness decision. The
-  Dockerfile is the brief's section 5.1 skeleton with the base image pinned by
+  file in the paper's repo and is a decision for the harness, not for this
+  record. The Dockerfile is the skeleton in docs/CONVENTIONS.md with the base
+  image pinned by
   digest; envs/scIB-python-paper.yml was used as-is. The second, independent
   blocker recorded in the manifest (configs/reproduce_paper.yaml points at
   absolute Theis-lab HPC paths) was not reached.

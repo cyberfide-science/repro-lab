@@ -1,5 +1,5 @@
-# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
-# STATUS: selected. This is the target expected to CARRY THE EXIT CRITERION:
+# Manifest written 2026-09-06. Claims and tolerances were committed before any run.
+# STATUS: selected. This is the target expected to demonstrate the goal here:
 # one paper's code running end to end in a fresh container from this manifest,
 # with no manual steps outside it and no edit to the cloned repo.
 # Every value below was read from a source opened on 2026-09-06; the URL or API
@@ -54,10 +54,11 @@ environment:
 
     Every runtime constraint is an open lower bound, so the resolution is not
     reproducible by itself. That is why the environment kind is docker: the
-    Dockerfile the executor writes lives in repro-lab (NOT in the paper's repo),
+    Dockerfile we write lives in repro-lab (NOT in the paper's repo),
     resolves once at build time, and the resolved set is dumped to
-    env-resolved.txt per brief section 5. Writing our own Dockerfile is not a
-    deviation - the brief's section 5 requires one - but pinning a dependency to
+    env-resolved.txt per docs/CONVENTIONS.md (environment capture). Writing our
+    own Dockerfile is not a deviation - the conventions require one - but pinning
+    a dependency to
     a version the project does not pin IS a choice, and the resolved list is the
     record of what was actually run.
 
@@ -75,13 +76,14 @@ environment:
 data:
   # Both files ship inside the repo. They are listed here with their immutable
   # raw.githubusercontent URLs at the pinned SHA so there is a fetchable, stable
-  # URI and a hash of record, exactly as the brief's section 5 asks. Sizes were
+  # URI and a hash of record, as docs/CONVENTIONS.md (environment capture) asks.
+  # Sizes were
   # measured on 2026-09-06 with curl -o /dev/null -w %{size_download}.
   # At run time pydeseq2.utils.load_example_data resolves the package-relative
   # path and reads the clone's own copy, so the run itself needs no network. The
   # point of hashing the fetched copy is to prove which bytes the pinned SHA
-  # carries; the executor should confirm the fetched file and the clone's file
-  # have the same sha256 and record it if they do not.
+  # carries; confirm the fetched file and the clone's file have the same sha256
+  # and record it if they do not.
   - id: synthetic_counts
     uri: https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_counts.csv
     path: data/pydeseq2/test_counts.csv
@@ -94,8 +96,8 @@ data:
     size_bytes: 1915
 
 claims:
-  # Pre-registered 2026-09-06, BEFORE any run, per brief section 4.2.
-  # All values were read first-hand by the planner from
+  # Pre-registered 2026-09-06, BEFORE any run, per docs/CONVENTIONS.md (tolerances).
+  # All values were read first-hand from
   #   https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/tests/data/single_factor/r_test_res.csv
   #   (1225 bytes, 11 lines: header + gene1..gene10)
   # and .../r_test_size_factors.csv (2838 bytes).
@@ -110,7 +112,7 @@ claims:
   # SHA: "def assert_res_almost_equal(py_res, r_res, tol=0.02)" (and line 218,
   # "assert (abs(r_res.stat - ds.results_df.stat) / abs(r_res.stat)).max() < tol").
   # That is tolerance source 1 - the authors' own stated precision - which the
-  # Unit 2 guide ranks above any guess of ours.
+  # docs/CONVENTIONS.md ranks above any guess of ours.
   - id: P1
     figure: "n/a - reference output committed in the repo, not a paper figure"
     panel: null
@@ -133,9 +135,9 @@ claims:
     extraction: manual
     source: >
       owkin/PyDESeq2@4426e4db tests/data/single_factor/r_test_res.csv line 3,
-      column padj = 0.00164558241101406; log10 of that is -2.783680, computed by
-      the planner on 2026-09-06. Stated as log10 with an absolute tolerance of
-      0.3 (about a factor of two) because the brief's section 4.2 gives p-values
+      column padj = 0.00164558241101406; log10 of that is -2.783680, computed on
+      2026-09-06. Stated as log10 with an absolute tolerance of 0.3 (about a
+      factor of two) because docs/CONVENTIONS.md (tolerances) gives p-values
       their own rule: a relative tolerance on a p-value is meaningless.
   - id: P3
     figure: "n/a - reference output committed in the repo"
@@ -168,19 +170,20 @@ claims:
       meaningless. Deliberately NOT ordered by |log2FoldChange| either: gene3
       (-0.632831858568865) and gene1 (0.632812315254828) differ by 2e-5 there.
 
-# Forward-compat with Unit 2 section 7.2. max_download_gb is the brief's
-# section 9.1 threshold. Total fetch here is 5,834 bytes, so this checkpoint
+# Reserved for the harness; see docs/CONVENTIONS.md. max_download_gb is the
+# checkpoint threshold from docs/CONVENTIONS.md. Total fetch here is 5,834
+# bytes, so this checkpoint
 # will not fire - which is the point of choosing this target.
 checkpoints:
   max_download_gb: 5
   max_stage_minutes: 30
 
-# Forward-compat with Unit 2 section 7.2. MUST stay empty for this target: if
+# Reserved for the harness; see docs/CONVENTIONS.md. MUST stay empty for this target: if
 # anything under the clone had to change to make the run work, the untouched
 # answer is "no" and that is the result to record.
 deviations: []
 
-# Forward-compat with Unit 2 section 7.2.
+# Reserved for the harness; see docs/CONVENTIONS.md.
 stages:
   - id: reference_suite
     cmd: ["pytest", "tests/", "-q", "--junitxml=/work/out/pytest.xml"]
@@ -211,8 +214,8 @@ selection:
 notes: >
   GATE: PASSES. Total 15, no zero in C1-C4. Highest-scoring candidate in this set.
 
-  Expected untouched outcome: YES. This is the target chosen to carry the Unit 1
-  exit criterion. The reasoning, all of it checkable before the run: the paper's
+  Expected untouched outcome: YES. This is the target chosen to demonstrate the
+  untouched test end to end. The reasoning, all of it checkable before the run: the paper's
   code is a pip-installable pure-Python package; its verification data ships in
   the repo, so the run needs no network; its reference values are committed CSVs
   produced by R DESeq2 v1.34.0; and the authors' own test suite is the end-to-end
@@ -221,8 +224,8 @@ notes: >
   Honest weaknesses, stated up front rather than discovered later. C1 is 1, not
   2: there is no deposited data record, and a reviewer is entitled to say that a
   target whose data lives in its own git tree is an easier problem than one whose
-  data lives on figshare. It is chosen anyway because Unit 1's exit criterion is
-  about proving the container-plus-manifest loop closes at all, and this is the
+  data lives on figshare. It is chosen anyway because the goal here is
+  proving the container-plus-manifest loop closes at all, and this is the
   candidate where that can actually be demonstrated rather than asserted. The
   scIB manifest in this same set is the one that carries the hard data problem.
 
@@ -235,4 +238,4 @@ notes: >
   2025 maintenance was taken over by the scverse community. The C6 replies above
   are from scverse maintainers, not from the paper's author list. That is
   genuine engagement and scores as such, but it is not the same thing as the
-  original authors answering, and it matters for Unit 6-style outreach.
+  original authors answering, and it matters for author outreach.

@@ -10,7 +10,8 @@ first_error: |
   n/a
 data_hashes_verified: n/a (not attempted; nothing was fetched)
 notes: |
-  Not attempted. The target fails the brief section 2 gate: total 8, below
+  Not attempted. The target fails the selection gate in docs/CONVENTIONS.md:
+  total 8, below
   the threshold of 11, with zeros on C2 (no licence: gh api
   repos/neurorestore/DE-analysis returns license null and the tree at 167f55a
   has no LICENSE blob) and C3 (no environment file of any kind: the tree is

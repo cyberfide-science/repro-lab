@@ -42,7 +42,7 @@ notes: |
   5 (results.file placeholder) without touching claims or tolerances; the
   claim values and tolerances checked here are those of 93e65f4c.
 
-  The unpickling failure predicted as UNCERTAIN in the plan (open issue 164,
+  The unpickling failure predicted as UNCERTAIN in the manifest (open issue 164,
   scikit-learn 1.8) did NOT fire here, and the reason is worth recording:
   the base image is python:3.9-slim (the repo's own choice), and pip's
   unpinned resolution on Python 3.9 tops out at scikit-learn 1.6.1, numpy
@@ -61,14 +61,14 @@ notes: |
 
   Data: both files fetched by the manifest URIs and hashed with hash_data.py
   (demo_2000_cells.h5ad 167d038d...ae9b 35,730,948 B; Immune_All_Low.pkl
-  290874d3...6502 2,824,990 B); sizes equal the content-lengths the planner
-  measured. BLAS: scipy-openblas 0.3.27 (numpy 2.0.2). Threads: OMP/MKL/
+  290874d3...6502 2,824,990 B); sizes equal the content-lengths measured on
+  2026-09-06 with curl -sIL. BLAS: scipy-openblas 0.3.27 (numpy 2.0.2). Threads: OMP/MKL/
   OPENBLAS_NUM_THREADS=1, PYTHONHASHSEED=0. Seeds: the annotate path used
   here (celltypist/classifier.py, models.py Model.load/predict) has no RNG
   call; np.random.seed/choice appear only in samples.py, train.py and
   models.py::convert, none of which this run executes. The Leiden-based
   --majority-voting option, which is seed-dependent, was not used.
 
-  This target does NOT carry the exit criterion (that is
+  This target is not the end-to-end untouched demonstration (that is
   muzellec-2023-pydeseq2). Same Windows command-form note as that record:
   $(pwd -W) is the Git Bash form; on Linux/macOS use $PWD.

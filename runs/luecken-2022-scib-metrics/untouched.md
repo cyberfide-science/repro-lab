@@ -10,9 +10,9 @@ first_error: |
   n/a
 data_hashes_verified: n/a (not attempted; nothing was fetched)
 notes: |
-  Not attempted; the exit criterion was met by muzellec-2023-pydeseq2
-  (runs/muzellec-2023-pydeseq2/untouched.md: untouched yes, exit 0). Per plan
-  step 9 this fallback is built only if PyDESeq2 fails to run untouched, so
+  Not attempted; muzellec-2023-pydeseq2 ran untouched
+  (runs/muzellec-2023-pydeseq2/untouched.md: untouched yes, exit 0). By design
+  this fallback is built only if PyDESeq2 fails to run untouched, so
   it stays status: candidate. No Dockerfile or run.sh was written for it and
   none of its three fixture files was downloaded; the manifest's sha256
   placeholders are intentionally unfilled.

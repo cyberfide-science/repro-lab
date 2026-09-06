@@ -1,10 +1,10 @@
-# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
+# Manifest written 2026-09-06. Claims and tolerances were committed before any run.
 # STATUS: selected. This target IS attempted, and it is expected to FAIL.
-# It is selected because it is the paper the track cares about and because a
-# recorded, specific, first-error failure is the Unit 1 deliverable for it
-# (brief section 6: "A 'no' is a valid Unit 1 result for two of the three
-# candidates"). The exit criterion - one target that runs untouched end to end -
-# is carried by a different manifest in this set, not by this one.
+# It is selected because it is the paper of most interest here and because a
+# recorded, specific, first-error failure is a valid result for it: a "no" with
+# the first error recorded exactly is what docs/CONVENTIONS.md asks for. The
+# end-to-end untouched demonstration - one target that runs untouched from its
+# manifest - is carried by a different manifest in this set, not by this one.
 # Every value below was read from a source opened on 2026-09-06; the URL or API
 # call is named in the comment or justification beside it.
 
@@ -54,9 +54,9 @@ environment:
   notes: >
     Two environments are required. envs/scIB-python-paper.yml is the Python
     environment used for the paper; envs/scIB-R-integration.yml is the R one.
-    Unit 1 scope is the Python environment only.
+    The scope here is the Python environment only.
 
-    KNOWN BREAK, recorded before the run. The planner read
+    KNOWN BREAK, recorded before the run. We read
     envs/scIB-python-paper.yml at e97631a on 2026-09-06 (GitHub contents API) and
     confirmed the pip block verbatim contains:
 
@@ -66,9 +66,10 @@ environment:
     `mamba env create -f envs/scIB-python-paper.yml` is expected to fail. The
     obvious fix (git+https://) is NOT applied here: it would be an edit to the
     paper's repo, which makes the untouched answer "no" by definition. It is
-    logged as the first deviation and handed to Unit 2.
+    logged as the first deviation; fixing it is a decision for the harness, not
+    for this record.
 
-    SECOND, INDEPENDENT BLOCKER, also confirmed before the run. The planner read
+    SECOND, INDEPENDENT BLOCKER, also confirmed before the run. We read
     configs/reproduce_paper.yaml at e97631a on the same date. Its ROOT is
     /storage/groups/ml01/projects/2020_scIB_malte.luecken and every entry under
     DATA_SCENARIOS points at an absolute path on the authors' HPC filer, e.g.
@@ -77,9 +78,9 @@ environment:
     outside the Theis lab, and the figshare file names are not the same strings.
     So even if the environment built, the paper config could not be run without
     editing it - which is also a deviation. Two independent blockers, both
-    recorded, neither fixed in Unit 1.
+    recorded, neither fixed here.
 
-    Note for the executor, not a licence to substitute: envs/scib-pipeline-R4.0.yml
+    Note, not a licence to substitute: envs/scib-pipeline-R4.0.yml
     at the same SHA pins scib via git+https:// (not git://) and would probably
     resolve. It is NOT the paper environment and produces different numbers.
     Swapping to it is a deviation and requires a human checkpoint.
@@ -110,24 +111,24 @@ data:
     size_bytes: "<fill by hand from hash_data.py output>"
 
 claims:
-  # Pre-registered 2026-09-06, before any run, per brief section 4.2.
-  # All three values were read by the planner from the actual file:
+  # Pre-registered 2026-09-06, before any run, per docs/CONVENTIONS.md (tolerances).
+  # All three values were read from the actual file:
   #   curl https://raw.githubusercontent.com/theislab/scib-reproducibility/
   #        3afbffd3674726e5146797be21cf6bd7470a2c5f/data/metrics.csv
   # (116,613 bytes, 466 lines = 1 header + 465 data rows, which matches the
-  # brief's "465 rows"). Row numbers below are line numbers in that file.
+  # "465 rows" an earlier scoring pass quoted). Row numbers below are line numbers in that file.
   # Tolerance rationale: 0.02 absolute on NMI and ARI, both bounded in [0,1],
-  # per brief section 4.2. Chosen from the "sensible for a bounded metric"
-  # source, not from any observed spread - there is no run yet. Provisional;
-  # revisit in Unit 3 after a seed sweep, and record old value, new value and
+  # per docs/CONVENTIONS.md (tolerances). Chosen from the "sensible for a bounded
+  # metric" source, not from any observed spread - there is no run yet. Provisional;
+  # revisit after a seed sweep, and record old value, new value and
   # reason in git if it changes.
-  - figure: "<fill: confirm the figure/panel against the paper PDF; the planner did not open it>"
+  - figure: "<fill: confirm the figure/panel against the paper PDF; it was not opened>"
     panel: "<fill>"
     metric: NMI_cluster/label, pancreas, unscaled, hvg, scanorama_embed
     value: 0.9218
     tolerance: 0.02
     tolerance_type: absolute
-    extraction: manual     # forward-compat with Unit 2 s7.2; transcribed from a CSV in the repo
+    extraction: manual     # reserved for the harness; transcribed from a CSV in the repo
     source: >
       scib-reproducibility@3afbffd data/metrics.csv line 26, row
       /pancreas/metrics/unscaled/hvg/scanorama_embed, column NMI_cluster/label.
@@ -155,23 +156,24 @@ claims:
       input: /pancreas/metrics/unscaled/hvg/scvi_embed = 0.990548145030244
       (line 230), .../scanorama_embed = 0.9813724345867806 (line 26),
       .../harmony_embed = 0.9756839996922988 (line 182). Rounded: 0.9905,
-      0.9814, 0.9757 - which reproduces the three values the brief quotes.
+      0.9814, 0.9757 - which reproduces the three values an earlier scoring
+      pass quoted.
       tolerance 0 means the ordering must be exactly preserved.
 
-# Forward-compat with Unit 2 section 7.2. max_download_gb is the brief's
-# section 9.1 threshold. The figshare record is 20.1 GB in total, so this
-# checkpoint WILL fire; the executor must stop and ask before downloading.
+# Reserved for the harness; see docs/CONVENTIONS.md. max_download_gb is the
+# checkpoint threshold from docs/CONVENTIONS.md. The figshare record is 20.1 GB
+# in total, so this checkpoint WILL fire; stop and ask before downloading.
 checkpoints:
   max_download_gb: 5
   max_stage_minutes: 720
 
-# Forward-compat with Unit 2 section 7.2. Empty on purpose: the run is expected
+# Reserved for the harness; see docs/CONVENTIONS.md. Empty on purpose: the run is expected
 # to fail and the failure is to be recorded, not worked around. An entry here
-# needs what / why / approved_by / date, and Unit 2 refuses to start a run with
-# an unapproved entry.
+# needs what / why / approved_by / date, and the harness must refuse to start a
+# run with an unapproved entry.
 deviations: []
 
-# Forward-compat with Unit 2 section 7.2. Not reachable in Unit 1 (the build is
+# Reserved for the harness; see docs/CONVENTIONS.md. Not reachable here (the build is
 # expected to fail first); named now so the shape is fixed.
 stages:
   - id: reproduce_paper
@@ -195,8 +197,8 @@ notes: >
   GATE: PASSES. Total 12, no zero in C1-C4.
 
   Expected untouched outcome: NO. Predicted first error, recorded before the run:
-  `mamba env create -f envs/scIB-python-paper.yml` fails. The brief predicts the
-  pip stage, on the clone of git+git://github.com/theislab/scib.git@0.2.0, and
+  `mamba env create -f envs/scIB-python-paper.yml` fails. An earlier scoring
+  pass predicted the pip stage, on the clone of git+git://github.com/theislab/scib.git@0.2.0, and
   that pin is confirmed verbatim in the file. A conda solver failure is the other
   plausible first error, because the same file asks for python=3.7 together with
   numba<=0.46, scvi=0.6.7 and r-seurat=3.1.1 on today's conda-forge. Whichever
@@ -206,8 +208,8 @@ notes: >
   configs/reproduce_paper.yaml points at absolute Theis-lab HPC paths.
 
   The figshare record is 20.1 GB in total and the per-file breakdown is not
-  obtainable from this network (403 on every figshare endpoint tried). The
-  executor must stop at the max_download_gb checkpoint and ask before fetching
+  obtainable from this network (403 on every figshare endpoint tried). The run
+  must stop at the max_download_gb checkpoint and ask before fetching
   anything, and must not guess a file name: hash_data.py deliberately reports a
   placeholder path as MISSING.
 
