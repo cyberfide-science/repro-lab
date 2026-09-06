@@ -44,7 +44,10 @@ environment:
     lower bounds: numpy>=1.19.0, pandas>=1.0.5, scikit-learn>=0.24.1,
     openpyxl>=3.0.4, click>=7.1.2, requests>=2.23.0, scanpy>=1.7.0,
     leidenalg>=0.9.0. setup.py reads that file into install_requires with
-    python_requires='>=3.6'.
+    python_requires='>=3.6'. Because that install line is unversioned, this run
+    installs celltypist from the clone at the pinned commit fe357564 rather than
+    via the Dockerfile's `pip install celltypist`, so the code under test is the
+    code the claims below were read from; that is logged as deviation 2 below.
 
     THE REPRODUCIBILITY HOLE, identified before the run. `celltypist
     --update-models` fetches https://celltypist.cog.sanger.ac.uk/models/models.json,
@@ -54,7 +57,7 @@ environment:
     celltypist/models.py checks a checksum. Two builds of the shipped Dockerfile
     a month apart are not the same environment.
 
-    HOW THIS MANIFEST HANDLES IT, and why that is not a deviation. The model is
+    HOW THIS MANIFEST HANDLES IT - logged as deviation 1 below. The model is
     fetched by its own versioned URL and hashed like any other data file (see
     data[] below), instead of via --update-models. That is a change to OUR fetch
     step, not to the paper's code: no file under the clone is touched, and the
