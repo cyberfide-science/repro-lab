@@ -14,7 +14,7 @@ Data fetch and hash, done once before the run (`data/` is gitignored). The URIs
 and paths are the manifest's `data[].uri` and `data[].path`:
 
 ```
-git clone <path-or-url-of-this-repo> repro-lab && cd repro-lab
+git clone https://github.com/cyberfide-science/repro-lab.git repro-lab && cd repro-lab
 mkdir -p data/pydeseq2
 curl -fL -o data/pydeseq2/test_counts.csv   https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_counts.csv
 curl -fL -o data/pydeseq2/test_metadata.csv https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_metadata.csv
