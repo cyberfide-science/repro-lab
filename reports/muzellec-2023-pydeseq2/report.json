@@ -76,7 +76,7 @@
       "sha256_expected": "09d632cc7b2792602599793062f980bd5a767afa9757943738263976f0e137c3",
       "sha256_actual": "09d632cc7b2792602599793062f980bd5a767afa9757943738263976f0e137c3",
       "bytes": 3919,
-      "fetched_at": "2026-09-06T22:49:11+00:00",
+      "fetched_at": "2026-09-06T23:11:15.809+00:00",
       "verified": true
     },
     {
@@ -86,15 +86,15 @@
       "sha256_expected": "d96a5bbff013100ecd99ba1b5a3b2e9d54768a4bfc6b6622a5830a59f524f0b6",
       "sha256_actual": "d96a5bbff013100ecd99ba1b5a3b2e9d54768a4bfc6b6622a5830a59f524f0b6",
       "bytes": 1915,
-      "fetched_at": "2026-09-06T22:49:11+00:00",
+      "fetched_at": "2026-09-06T23:11:15.938+00:00",
       "verified": true
     }
   ],
   "deviations": [],
   "cost": {
-    "wall_minutes": 0.983,
+    "wall_minutes": 0.917,
     "agent_tokens": 0,
     "usd_estimate": 0.0
   },
-  "generated_at": "2026-09-06T22:50:10+00:00"
+  "generated_at": "2026-09-06T23:12:11.642+00:00"
 }

@@ -2,7 +2,7 @@
 
 - DOI: 10.1126/science.abl5197
 - Code: `fe357564a6625d3b1732a022fd39f18e55696e80`
-- Generated: 2026-09-06T22:50:28+00:00
+- Generated: 2026-09-06T23:12:28.284+00:00
 
 ## Summary verdict: **reproduced**
 
@@ -25,8 +25,8 @@ None: every pinned component matched.
 
 | id | uri | bytes | sha256 verified | fetched |
 |---|---|---|---|---|
-| demo_cells | https://celltypist.cog.sanger.ac.uk/Notebook_demo_data/demo_2000_cells.h5ad | 35730948 | True | 2026-09-06T22:50:18+00:00 |
-| model_immune_all_low_v2 | https://celltypist.cog.sanger.ac.uk/models/Pan_Immune_CellTypist/v2/Immune_All_Low.pkl | 2824990 | True | 2026-09-06T22:50:19+00:00 |
+| demo_cells | https://celltypist.cog.sanger.ac.uk/Notebook_demo_data/demo_2000_cells.h5ad | 35730948 | True | 2026-09-06T23:12:19.653+00:00 |
+| model_immune_all_low_v2 | https://celltypist.cog.sanger.ac.uk/models/Pan_Immune_CellTypist/v2/Immune_All_Low.pkl | 2824990 | True | 2026-09-06T23:12:20.780+00:00 |
 
 ## Deviations log
 
@@ -39,6 +39,6 @@ None: every pinned component matched.
 
 ## Time and cost
 
-- Wall time: 0.15 min
+- Wall time: 0.133 min
 - Agent tokens: 0
 - Estimated cost: USD 0.0

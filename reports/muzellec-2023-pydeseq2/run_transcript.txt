@@ -8,7 +8,7 @@ $ py -3 run_all.py muzellec-2023-pydeseq2
 [fetch_verify] synthetic_counts: 3919 bytes, sha256 OK
 [fetch_verify] synthetic_metadata: 1915 bytes, sha256 OK
 [run_pipeline] stage container_run: docker run --rm -v <repo_root>/data:/work/data:ro -v <repo_root>/out/muzellec-2023-pydeseq2:/work/out repro-lab/muzellec-2023-pydeseq2
-[run_pipeline]   exit 0 in 58.57 s; log at work/muzellec-2023-pydeseq2/logs/container_run.log
+[run_pipeline]   exit 0 in 55.4 s; log at work/muzellec-2023-pydeseq2/logs/container_run.log
 [run_pipeline] code_sha from the run's own output: 4426e4db990db1c511de3b1b9b7a514989663dad
 [run_pipeline] extracted 4 metrics -> work/muzellec-2023-pydeseq2/results.json
 [diff_claims] 4/4 claims within tolerance -> verdict: reproduced

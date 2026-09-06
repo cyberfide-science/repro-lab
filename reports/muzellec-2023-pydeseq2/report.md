@@ -2,7 +2,7 @@
 
 - DOI: 10.1093/bioinformatics/btad547
 - Code: `4426e4db990db1c511de3b1b9b7a514989663dad`
-- Generated: 2026-09-06T22:50:10+00:00
+- Generated: 2026-09-06T23:12:11.642+00:00
 
 ## Summary verdict: **reproduced**
 
@@ -25,8 +25,8 @@ None: every pinned component matched.
 
 | id | uri | bytes | sha256 verified | fetched |
 |---|---|---|---|---|
-| synthetic_counts | https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_counts.csv | 3919 | True | 2026-09-06T22:49:11+00:00 |
-| synthetic_metadata | https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_metadata.csv | 1915 | True | 2026-09-06T22:49:11+00:00 |
+| synthetic_counts | https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_counts.csv | 3919 | True | 2026-09-06T23:11:15.809+00:00 |
+| synthetic_metadata | https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_metadata.csv | 1915 | True | 2026-09-06T23:11:15.938+00:00 |
 
 ## Deviations log
 
@@ -34,6 +34,6 @@ None.
 
 ## Time and cost
 
-- Wall time: 0.983 min
+- Wall time: 0.917 min
 - Agent tokens: 0
 - Estimated cost: USD 0.0

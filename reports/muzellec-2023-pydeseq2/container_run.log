@@ -2,7 +2,7 @@
 == python: Python 3.12.14
 == pytest tests/ (the authors' own suite against the committed R DESeq2 v1.34.0 reference CSVs)
 .................................................................        [100%]
-65 passed in 53.96s
+65 passed in 51.29s
 == extract_results.py (repro-lab's own script; public API only)
 Using None as control genes, passed at DeseqDataSet initialization
 Log2 fold change & Wald test p-value: condition B vs A
@@ -30,10 +30,10 @@ Fitting dispersions...
 ... done in 0.01 seconds.
 
 Fitting dispersion trend curve...
-... done in 0.01 seconds.
+... done in 0.00 seconds.
 
 Fitting MAP dispersions...
-... done in 0.01 seconds.
+... done in 0.00 seconds.
 
 Fitting LFCs...
 ... done in 0.00 seconds.
