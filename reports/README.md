@@ -1,1 +1,1 @@
-Reserved for reproducibility reports. Empty for now.
+Reproducibility reports, one directory per target: `report.json` (written by `harness/diff_claims.py`, validated against `harness/schema/report.schema.json`), `report.md` (rendered from it), `checkpoints.md` (transcripts of the harness checkpoints firing, on a scratch copy) and `review.md` (the adversarial reviewer's findings and verdict). How they are produced: `harness/README.md`.
