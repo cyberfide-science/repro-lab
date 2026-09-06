@@ -13,3 +13,11 @@ once, on a scratch copy of the PyDESeq2 target with a deliberately altered
 manifest: `reports/muzellec-2023-pydeseq2/checkpoints.md`. What this target
 exercises for real is the deviations ledger: both of its deviations appear in
 `report.md` rather than stopping the run.
+
+## The reviewer's two "fix" findings
+
+`review.md` in this directory records two findings of severity fix. Finding 8
+(no `checkpoints.md` here) is closed by this file. Finding 3 concerns the
+manifest's `deviations[].approved_by` string, a value committed before the run;
+changing it after the run would itself be a post-run manifest edit, so it is
+left as committed and the finding stands as recorded.

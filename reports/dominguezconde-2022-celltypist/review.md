@@ -114,7 +114,3 @@ The report.md text passes. It contains no statement that the paper or the author
 Zero "block" findings: two "fix" (findings 3 and 8) and six "note".
 
 APPROVED
-
----
-
-Executor's disposition of the two "fix" findings, recorded here rather than argued away: finding 8 is closed by `checkpoints.md` in this directory, which states that no checkpoint fired on this target and why. Finding 3 concerns the manifest's `approved_by` string, which is a pre-run manifest value; changing it after the run would itself be a post-run manifest edit, so it is left as committed and the finding stands as recorded.
