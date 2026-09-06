@@ -200,6 +200,34 @@ stages:
 results:
   file: "out/results.csv"        # key,value CSV: the four metrics named in claims[]
 
+# Added before the report run. Everything the report harness needs on the HOST
+# that the blocks above do not already carry. Additive only: no claim, value,
+# tolerance or tolerance_type above was touched. See docs/CONVENTIONS.md
+# (the harness block).
+harness:
+  image: repro-lab/muzellec-2023-pydeseq2
+  # Host path of the file named by results.file above (the container writes
+  # /work/out/results.csv; /work/out is bind-mounted from out/<slug>/).
+  results_file: out/muzellec-2023-pydeseq2/results.csv
+  # claims[].id -> the key that carries that claim's value in results_file.
+  # The keys are the ones extract_results.py already writes; nothing is renamed.
+  claim_keys:
+    P1: P1_log2FoldChange_gene1
+    P2: P2_log10_padj_gene2
+    P3: P3_size_factor_sample1
+    P4: P4_top3_genes_by_abs_stat
+  # The host-level command, run as an argv list (no shell). stages[] above is
+  # unchanged and still means what docs/CONVENTIONS.md says it means: the
+  # commands run.sh executes INSIDE the container. {repo_root} is substituted
+  # with the absolute path of the repository root, forward-slashed.
+  stages:
+    - id: container_run
+      cmd: ["docker", "run", "--rm",
+            "-v", "{repo_root}/data:/work/data:ro",
+            "-v", "{repo_root}/out/muzellec-2023-pydeseq2:/work/out",
+            "repro-lab/muzellec-2023-pydeseq2"]
+      expected_minutes: 5
+
 selection:
   C1: {score: 1, justification: "No deposited data record. The synthetic count matrix (datasets/synthetic/test_counts.csv, 3919 bytes) and the R DESeq2 reference outputs ship in the repo and are identified only by the pinned git SHA - stable and public, but not a DOI or accession. The paper's applied datasets are TCGA via the GDC portal with no accession list in the repo or the PMC full text (https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10502239/fullTextXML)"}
   C2: {score: 2, justification: "gh api repos/owkin/PyDESeq2 -> spdx_id MIT; LICENSE (1062 bytes) present in the tree at 4426e4db"}

@@ -25,4 +25,5 @@ RUN pip install "/work/celltypist" \
  && python -c "import numpy; numpy.show_config()" > /work/numpy-show-config.txt 2>&1
 
 COPY run.sh /work/run.sh
+COPY extract_results.py /work/extract_results.py
 ENTRYPOINT ["bash", "/work/run.sh"]

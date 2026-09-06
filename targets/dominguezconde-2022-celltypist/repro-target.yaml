@@ -195,11 +195,42 @@ stages:
           "--model", "data/celltypist/Immune_All_Low.pkl", "--outdir", "out/"]
     expected_minutes: 10
 results:
-  # The run wrote three CSVs into --outdir: predicted_labels.csv (47,433 B),
-  # probability_matrix.csv (4,369,666 B) and decision_matrix.csv (3,813,844 B).
-  # predicted_labels.csv is the one the claims are checked against; the other two
-  # are kept as run artefacts.
-  file: "out/predicted_labels.csv"
+  # The annotate stage writes three CSVs into --outdir: predicted_labels.csv
+  # (47,433 B), probability_matrix.csv (4,369,666 B) and decision_matrix.csv
+  # (3,813,844 B), and run.sh tees the stage's own stdout to annotate.log. None
+  # of those is a key,value table, so run.sh's last step is extract_results.py
+  # (repro-lab's own script, not the paper's code): it reads the model through
+  # celltypist's public API for T1 and T2 and parses annotate.log for the two
+  # numbers the stage itself printed (T3, T4), and writes them to results.csv.
+  # No value is retyped. The three CSVs are kept as run artefacts.
+  file: "out/results.csv"        # key,value CSV: the four metrics named in claims[]
+
+# Added before the report run. Everything the report harness needs on the HOST
+# that the blocks above do not already carry. Additive only: no claim, value,
+# tolerance or tolerance_type above was touched. See docs/CONVENTIONS.md
+# (the harness block).
+harness:
+  image: repro-lab/dominguezconde-2022-celltypist
+  # Host path of the file named by results.file above (the container writes
+  # /work/out/results.csv; /work/out is bind-mounted from out/<slug>/).
+  results_file: out/dominguezconde-2022-celltypist/results.csv
+  # claims[].id -> the key that carries that claim's value in results_file.
+  claim_keys:
+    T1: T1_n_cell_types
+    T2: T2_n_features
+    T3: T3_n_features_used
+    T4: T4_n_genes_input
+  # The host-level command, run as an argv list (no shell). stages[] above is
+  # unchanged and still means what docs/CONVENTIONS.md says it means: the
+  # commands run.sh executes INSIDE the container. {repo_root} is substituted
+  # with the absolute path of the repository root, forward-slashed.
+  stages:
+    - id: container_run
+      cmd: ["docker", "run", "--rm",
+            "-v", "{repo_root}/data:/work/data:ro",
+            "-v", "{repo_root}/out/dominguezconde-2022-celltypist:/work/out",
+            "repro-lab/dominguezconde-2022-celltypist"]
+      expected_minutes: 2
 
 selection:
   C1: {score: 2, justification: "ArrayExpress E-MTAB-11536 plus Zenodo DOI 10.5281/zenodo.6334988, both named in the Data availability section of https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7612735/fullTextXML; E-MTAB-11536 confirmed public with ReleaseDate 2022-04-13 via the EBI BioStudies API, no login and no data-use agreement"}
