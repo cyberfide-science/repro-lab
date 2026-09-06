@@ -19,7 +19,7 @@ os.makedirs(WORK, exist_ok=True)
 os.chdir(ROOT)
 
 image = M["harness"]["image"]
-target_dir = os.path.join("targets", SLUG)
+target_dir = f"targets/{SLUG}"
 resolved = f"targets/{SLUG}/env-resolved.txt"
 
 
