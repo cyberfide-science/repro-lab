@@ -1,0 +1,19 @@
+# Terminal transcript of the run that produced report.json and report.md in this directory (Git Bash on Windows, Docker Desktop). The only edit is that the absolute path of the repository root has been replaced by <repo_root> in the two -v arguments; everything else is as printed.
+
+$ py -3 run_all.py dominguezconde-2022-celltypist
+[build_env] docker build -t repro-lab/dominguezconde-2022-celltypist targets/dominguezconde-2022-celltypist
+[build_env] image repro-lab/dominguezconde-2022-celltypist id sha256:866b1ca53427a3f2eeb969372dc15235fb055755fea053e0553a872b4ecebb5d
+[build_env] base python@sha256:2d97f6910b16bd338d3060f261f53f144965f755599aab1acda1e13cf1731b1b; container python 3.9.25
+[build_env] 0 difference(s) vs targets/dominguezconde-2022-celltypist/env-resolved.txt
+[fetch_verify] demo_cells: 35730948 bytes, sha256 OK
+[fetch_verify] model_immune_all_low_v2: 2824990 bytes, sha256 OK
+[run_pipeline] stage container_run: docker run --rm -v <repo_root>/data:/work/data:ro -v <repo_root>/out/dominguezconde-2022-celltypist:/work/out repro-lab/dominguezconde-2022-celltypist
+[run_pipeline]   exit 0 in 8.16 s; log at work/dominguezconde-2022-celltypist/logs/container_run.log
+[run_pipeline] code_sha from the run's own output: fe357564a6625d3b1732a022fd39f18e55696e80
+[run_pipeline] extracted 4 metrics -> work/dominguezconde-2022-celltypist/results.json
+[diff_claims] 4/4 claims within tolerance -> verdict: reproduced
+[diff_claims] report.json validated against harness/schema/report.schema.json
+[diff_claims] wrote reports/dominguezconde-2022-celltypist/report.json
+[render_report] wrote reports/dominguezconde-2022-celltypist/report.md
+[run_all] done: reports/dominguezconde-2022-celltypist/report.json, reports/dominguezconde-2022-celltypist/report.md
+$ echo $?  ->  0

@@ -1,0 +1,109 @@
+{
+  "paper": {
+    "doi": "10.1126/science.abl5197",
+    "title": "Cross-tissue immune cell analysis reveals tissue-specific features in humans",
+    "code_sha": "fe357564a6625d3b1732a022fd39f18e55696e80"
+  },
+  "verdict": "reproduced",
+  "claims": [
+    {
+      "id": "T1",
+      "figure": "n/a - committed notebook output, not a paper figure",
+      "panel": null,
+      "metric": "T1_n_cell_types",
+      "claimed": 98,
+      "obtained": 98,
+      "tolerance": 0,
+      "tolerance_type": "absolute",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/dominguezconde-2022-celltypist/results.json"
+    },
+    {
+      "id": "T2",
+      "figure": "n/a - committed notebook output",
+      "panel": null,
+      "metric": "T2_n_features",
+      "claimed": 6639,
+      "obtained": 6639,
+      "tolerance": 0,
+      "tolerance_type": "absolute",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/dominguezconde-2022-celltypist/results.json"
+    },
+    {
+      "id": "T3",
+      "figure": "n/a - committed notebook output",
+      "panel": null,
+      "metric": "T3_n_features_used",
+      "claimed": 5645,
+      "obtained": 5645,
+      "tolerance": 0,
+      "tolerance_type": "absolute",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/dominguezconde-2022-celltypist/results.json"
+    },
+    {
+      "id": "T4",
+      "figure": "n/a - committed notebook output",
+      "panel": null,
+      "metric": "T4_n_genes_input",
+      "claimed": 18950,
+      "obtained": 18950,
+      "tolerance": 0,
+      "tolerance_type": "absolute",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/dominguezconde-2022-celltypist/results.json"
+    }
+  ],
+  "environment_delta": [],
+  "data_provenance": [
+    {
+      "id": "demo_cells",
+      "uri": "https://celltypist.cog.sanger.ac.uk/Notebook_demo_data/demo_2000_cells.h5ad",
+      "dest": "data/celltypist/demo_2000_cells.h5ad",
+      "sha256_expected": "167d038d57bc7aee2854f12c3337cc1f58846f4ae7382745639a0957831bae9b",
+      "sha256_actual": "167d038d57bc7aee2854f12c3337cc1f58846f4ae7382745639a0957831bae9b",
+      "bytes": 35730948,
+      "fetched_at": "2026-09-06T22:18:16+00:00",
+      "verified": true
+    },
+    {
+      "id": "model_immune_all_low_v2",
+      "uri": "https://celltypist.cog.sanger.ac.uk/models/Pan_Immune_CellTypist/v2/Immune_All_Low.pkl",
+      "dest": "data/celltypist/Immune_All_Low.pkl",
+      "sha256_expected": "290874d35dac039d4c9218c343fde4aac1077709b72a331ce7266f6828c36502",
+      "sha256_actual": "290874d35dac039d4c9218c343fde4aac1077709b72a331ce7266f6828c36502",
+      "bytes": 2824990,
+      "fetched_at": "2026-09-06T22:18:17+00:00",
+      "verified": true
+    }
+  ],
+  "deviations": [
+    {
+      "what": "`celltypist --update-models` is skipped. The model is fetched instead by an explicit versioned URL, https://celltypist.cog.sanger.ac.uk/models/Pan_Immune_CellTypist/v2/Immune_All_Low.pkl, and hashed like any other input (data[].model_immune_all_low_v2).\n",
+      "why": "--update-models resolves through https://celltypist.cog.sanger.ac.uk/models/models.json, which is mutable and unversioned (last-modified 2026-03-16, nine months after the code froze on 2025-06-25) and is checksum-free in celltypist/models.py. Fetching the versioned URL directly makes the model bytes pinnable and hashable. No file under the clone is touched; only our fetch step changes.\n",
+      "approved_by": "maintainer (recorded post-run; neither change touches the paper's code)",
+      "date": "2026-09-06"
+    },
+    {
+      "what": "celltypist is installed from the clone at the pinned commit fe357564a6625d3b1732a022fd39f18e55696e80, rather than by the repo Dockerfile's unversioned `pip install celltypist`.\n",
+      "why": "The repo's Dockerfile (579 bytes at fe357564) pins nothing, so `pip install celltypist` would resolve to whatever version PyPI serves on the build day - not necessarily the code this manifest's claims were read from. Installing the pinned SHA keeps the code under test identical to the code cited in claims[].source. Dependency versions remain unpinned, as the project leaves them.\n",
+      "approved_by": "maintainer (recorded post-run; neither change touches the paper's code)",
+      "date": "2026-09-06"
+    }
+  ],
+  "cost": {
+    "wall_minutes": 0.133,
+    "agent_tokens": 0,
+    "usd_estimate": 0.0
+  },
+  "generated_at": "2026-09-06T22:18:26+00:00"
+}

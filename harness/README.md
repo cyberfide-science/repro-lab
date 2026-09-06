@@ -23,6 +23,41 @@ and stop at the first non-zero exit. Each script also runs on its own:
 `work/<slug>/` is regenerated on every run and is gitignored, as is `data/`.
 `reports/<slug>/` is committed.
 
+GNU make was not available on the machine that produced the committed
+reports, so `run_all.py` produced them. The Makefile's path was verified by
+running its recipe commands by hand, in the Makefile's order, on a fresh copy
+of the repository; the result was the same report. The transcript, with the
+host paths replaced by placeholders:
+
+```
+$ # the Makefile recipes, run by hand in the Makefile order, on the scratch copy with its manifest restored
+$ rm -rf work/muzellec-2023-pydeseq2          # clean
+$ py -3 harness/build_env.py muzellec-2023-pydeseq2
+[build_env] docker build -t repro-lab/muzellec-2023-pydeseq2 targets/muzellec-2023-pydeseq2
+[build_env] image repro-lab/muzellec-2023-pydeseq2 id sha256:f2226316d67088b598abb0a28a48410d4015c9edb983497424b48decd4a26402
+[build_env] base python@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea; container python 3.12.14
+[build_env] 0 difference(s) vs targets/muzellec-2023-pydeseq2/env-resolved.txt
+$ echo $?  ->  0
+$ py -3 harness/fetch_verify.py muzellec-2023-pydeseq2
+[fetch_verify] synthetic_counts: 3919 bytes, sha256 OK
+[fetch_verify] synthetic_metadata: 1915 bytes, sha256 OK
+$ echo $?  ->  0
+$ py -3 harness/run_pipeline.py muzellec-2023-pydeseq2
+[run_pipeline] stage container_run: docker run --rm -v <scratch_copy>/data:/work/data:ro -v <scratch_copy>/out/muzellec-2023-pydeseq2:/work/out repro-lab/muzellec-2023-pydeseq2
+[run_pipeline]   exit 0 in 55.18 s; log at work/muzellec-2023-pydeseq2/logs/container_run.log
+[run_pipeline] code_sha from the run's own output: 4426e4db990db1c511de3b1b9b7a514989663dad
+[run_pipeline] extracted 4 metrics -> work/muzellec-2023-pydeseq2/results.json
+$ echo $?  ->  0
+$ py -3 harness/diff_claims.py muzellec-2023-pydeseq2
+[diff_claims] 4/4 claims within tolerance -> verdict: reproduced
+[diff_claims] report.json validated against harness/schema/report.schema.json
+[diff_claims] wrote reports/muzellec-2023-pydeseq2/report.json
+$ echo $?  ->  0
+$ py -3 harness/render_report.py muzellec-2023-pydeseq2
+[render_report] wrote reports/muzellec-2023-pydeseq2/report.md
+$ echo $?  ->  0
+```
+
 ## The six stages
 
 | Stage | Script | Evidence file |
@@ -79,7 +114,7 @@ does not set it (see `harness/prompts/executor.md`).
 role briefs. The reviewer brief is the published text unchanged, and the
 paths it names are resolved by this table:
 
-| The brief says | In this repository |
+| The reviewer brief names | In this repository |
 |---|---|
 | `repro-target.yaml` | `targets/<slug>/repro-target.yaml` |
 | `report.json`, `report.md` | `reports/<slug>/report.json`, `reports/<slug>/report.md` |

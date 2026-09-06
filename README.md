@@ -20,7 +20,9 @@ runs/<slug>/      untouched.md, stdout.txt, build.log
 out/<slug>/       outputs written by the container
 docs/             CONVENTIONS.md (criteria, schema, tolerances, untouched test)
 hash_data.py      fills data[].sha256 in a manifest from the fetched files
-harness/ reports/ reserved, empty for now
+harness/          the report harness: five stage scripts, the report schema, the role briefs
+work/<slug>/      evidence files written by a harness run (gitignored, regenerated every run)
+reports/<slug>/   report.json, report.md, run_transcript.txt, container_run.log, checkpoints.md, fresh_clone.md, review.md
 ```
 
 ## Run the PyDESeq2 target (Muzellec et al. 2023)
@@ -59,5 +61,69 @@ and an empty `git status` line for the clone.
 
 Full records: `runs/<slug>/untouched.md`. Resolved environments:
 `targets/<slug>/env-resolved.txt`; host details in `host.txt`.
+
+## Reports
+
+A report is the manifest's claims checked against one harness run: every
+claim with its pre-registered tolerance, the environment that actually ran,
+the data hashes, the deviations ledger and the cost, as `report.json`
+(validated against `harness/schema/report.schema.json`) and `report.md`
+rendered from it. How the harness works: `harness/README.md`.
+
+| slug | verdict | report |
+|---|---|---|
+| muzellec-2023-pydeseq2 | reproduced (4 of 4 claims) | [reports/muzellec-2023-pydeseq2/report.md](reports/muzellec-2023-pydeseq2/report.md) |
+| dominguezconde-2022-celltypist | reproduced (4 of 4 claims) | [reports/dominguezconde-2022-celltypist/report.md](reports/dominguezconde-2022-celltypist/report.md) |
+
+To regenerate, from the repository root with Docker running:
+
+```
+py -3 run_all.py muzellec-2023-pydeseq2
+py -3 run_all.py dominguezconde-2022-celltypist
+```
+
+GNU make was not present on the machine that produced these reports, so
+`run_all.py` is the documented substitute for `make report TARGET=<slug>`: it
+runs the Makefile's five recipes in the Makefile's order and stops at the
+first non-zero exit. The Makefile's path was verified by running its five
+recipe commands by hand, in order, in a fresh copy; the transcript is in
+`harness/README.md`. `HARNESS_APPROVE=1` pre-answers the two interactive
+checkpoints and is for unattended runs only.
+
+Fresh-clone check: clone this repository into an empty directory (no `data/`,
+no `work/`), run the two commands above, then compare with the committed
+reports with the timestamps and wall time masked:
+
+```
+mask() { sed -E -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:+.Z-]{5,}/TIMESTAMP/g' \
+                -e 's/^- Wall time: .*/- Wall time: WALL/' "$1"; }
+for s in muzellec-2023-pydeseq2 dominguezconde-2022-celltypist; do
+  diff <(mask "reports/$s/report.md") <(mask "<orig>/reports/$s/report.md") && echo "$s: identical"
+done
+```
+
+and for the JSON, with `generated_at`, `fetched_at` and `wall_minutes` removed:
+
+```
+norm() { py -3 -c "import json,sys; d=json.load(open(sys.argv[1],encoding='utf-8')); \
+d['generated_at']='X'; d['cost']['wall_minutes']=0; \
+[p.update(fetched_at='X') for p in d['data_provenance']]; \
+print(json.dumps(d,indent=2,sort_keys=True))" "$1"; }
+diff <(norm "reports/$s/report.json") <(norm "<orig>/reports/$s/report.json")
+```
+
+Both diffs were empty for both targets when the committed reports were made;
+the commands and their output are in `reports/<slug>/fresh_clone.md`.
+
+Where the evidence lives: `reports/<slug>/run_transcript.txt` is the terminal
+output of the run, `container_run.log` is the container's stdout and stderr
+(the code SHA line, the test-suite result, the clean `git status` inside the
+clone), `checkpoints.md` shows every checkpoint firing on a scratch copy, and
+`review.md` is the adversarial reviewer's verdict. The regenerated files under
+`work/<slug>/` are gitignored.
+
+The cost block records wall time from the run log. Token and dollar counts are
+zero: these runs were driven from a terminal, and no wrapper was in place to
+count them. A zero here means "not measured by an agent wrapper", not "free".
 
 MIT licence for this repo; the paper repos keep their own.

@@ -1,0 +1,100 @@
+{
+  "paper": {
+    "doi": "10.1093/bioinformatics/btad547",
+    "title": "PyDESeq2: a python package for bulk RNA-seq differential expression analysis",
+    "code_sha": "4426e4db990db1c511de3b1b9b7a514989663dad"
+  },
+  "verdict": "reproduced",
+  "claims": [
+    {
+      "id": "P1",
+      "figure": "n/a - reference output committed in the repo, not a paper figure",
+      "panel": null,
+      "metric": "P1_log2FoldChange_gene1",
+      "claimed": 0.632812315254828,
+      "obtained": 0.632812476644658,
+      "tolerance": 0.02,
+      "tolerance_type": "relative",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/muzellec-2023-pydeseq2/results.json"
+    },
+    {
+      "id": "P2",
+      "figure": "n/a - reference output committed in the repo",
+      "panel": null,
+      "metric": "P2_log10_padj_gene2",
+      "claimed": -2.78368,
+      "obtained": -2.783684562340294,
+      "tolerance": 0.3,
+      "tolerance_type": "absolute",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/muzellec-2023-pydeseq2/results.json"
+    },
+    {
+      "id": "P3",
+      "figure": "n/a - reference output committed in the repo",
+      "panel": null,
+      "metric": "P3_size_factor_sample1",
+      "claimed": 1.22898093726827,
+      "obtained": 1.228980937268269,
+      "tolerance": 0.02,
+      "tolerance_type": "relative",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/muzellec-2023-pydeseq2/results.json"
+    },
+    {
+      "id": "P4",
+      "figure": "n/a - reference output committed in the repo",
+      "panel": null,
+      "metric": "P4_top3_genes_by_abs_stat",
+      "claimed": [
+        "gene5",
+        "gene2",
+        "gene4"
+      ],
+      "obtained": "gene5;gene2;gene4",
+      "tolerance": 0,
+      "tolerance_type": "rank_order",
+      "extraction": "manual",
+      "verdict": "reproduced",
+      "cause_category": "n/a",
+      "evidence_path": "work/muzellec-2023-pydeseq2/results.json"
+    }
+  ],
+  "environment_delta": [],
+  "data_provenance": [
+    {
+      "id": "synthetic_counts",
+      "uri": "https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_counts.csv",
+      "dest": "data/pydeseq2/test_counts.csv",
+      "sha256_expected": "09d632cc7b2792602599793062f980bd5a767afa9757943738263976f0e137c3",
+      "sha256_actual": "09d632cc7b2792602599793062f980bd5a767afa9757943738263976f0e137c3",
+      "bytes": 3919,
+      "fetched_at": "2026-09-06T22:17:05+00:00",
+      "verified": true
+    },
+    {
+      "id": "synthetic_metadata",
+      "uri": "https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_metadata.csv",
+      "dest": "data/pydeseq2/test_metadata.csv",
+      "sha256_expected": "d96a5bbff013100ecd99ba1b5a3b2e9d54768a4bfc6b6622a5830a59f524f0b6",
+      "sha256_actual": "d96a5bbff013100ecd99ba1b5a3b2e9d54768a4bfc6b6622a5830a59f524f0b6",
+      "bytes": 1915,
+      "fetched_at": "2026-09-06T22:17:05+00:00",
+      "verified": true
+    }
+  ],
+  "deviations": [],
+  "cost": {
+    "wall_minutes": 0.95,
+    "agent_tokens": 0,
+    "usd_estimate": 0.0
+  },
+  "generated_at": "2026-09-06T22:18:04+00:00"
+}

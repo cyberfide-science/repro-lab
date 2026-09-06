@@ -42,6 +42,7 @@ selected target does not run untouched), `deferred` (fails the gate).
 | `deviations[]` | Every departure from the paper's own stated procedure, each with `what`, `why`, `approved_by`, `date`. Empty means the paper's procedure was followed as-is. |
 | `stages[]` | `id`, `cmd` (argv list), `expected_minutes`. The run.sh executes these in order. |
 | `results.file` | The output file, relative to the container's `/work`, that the claims are checked against. |
+| `harness` | `image`, `results_file` (host path of `results.file`), `claim_keys` (claim id -> key in the results file), `stages[]` (`id`, `cmd` as an argv list with `{repo_root}` substituted at run time, `expected_minutes`). The host-level commands the report harness runs; `stages[]` above stays the in-container list. |
 | `selection` | `C1`..`C8` each `{score, justification}`, and `total`. |
 | `notes` | Gate verdict, expected untouched outcome with its reasoning, known weaknesses. |
 
@@ -57,6 +58,10 @@ A placeholder is never replaced by a guess.
   rank on a column that contains ties.
 - p-values: compare log10(p) with an absolute tolerance of 0.3 (about a factor
   of two). A relative tolerance on a p-value is meaningless.
+- The report schema spells the rank type `rank_order` and the harness maps
+  `rank-order` onto it. `tolerance: 0` is the only rank tolerance the harness
+  implements (exact ordering); a non-zero rank tolerance is refused rather than
+  approximated.
 
 Tolerance sources, in order of preference: (1) the precision the authors
 themselves assert at (a test suite's tolerance, a stated rounding); (2) a
@@ -103,6 +108,36 @@ dependency the project does not pin, a patched config) turns "untouched" into
 "no" by definition; whether to apply it is a decision for the harness, not for
 the run record.
 
+## The report
+
+The report harness (`harness/`, described in `harness/README.md`) runs six
+stages, each writing one evidence file under the gitignored `work/<slug>/`:
+
+1. build the environment -> `env_actual.json` (image id, base image, container
+   Python, every difference from `targets/<slug>/env-resolved.txt`);
+2. fetch and verify data -> `provenance.json` (expected and actual sha256 per
+   `data[]` entry; a mismatch stops the run);
+3. run the pipeline -> `logs/<stage id>.log` and `run_log.json` (argv, exit
+   code, seconds, the code SHA read from the container's `== git HEAD:` line);
+4. extract results -> `results.json`, parsed from the manifest's `results.file`
+   without retyping;
+5. diff claims -> `reports/<slug>/report.json`, validated against
+   `harness/schema/report.schema.json` (JSON Schema draft 2020-12) before it
+   is written;
+6. render -> `reports/<slug>/report.md`, carrying no number the JSON does not.
+
+The four checkpoints and the manifest keys they read: download size
+(`checkpoints.max_download_gb` against `data[].size_bytes`), stage duration
+(`checkpoints.max_stage_minutes` against `harness.stages[].expected_minutes`),
+an unapproved deviation (`deviations[].approved_by` empty; the run refuses to
+start), and an out-of-tolerance claim (the report is still written, flagged
+for human review before any outreach).
+
+`reports/<slug>/` holds `report.json`, `report.md`, `checkpoints.md` and
+`review.md`. The adversarial reviewer brief is `harness/prompts/reviewer.md`;
+the mapping from the paths it names onto this repository's layout is in
+`harness/README.md`.
+
 ## Environment capture
 
 - Everything runs in a container. The base image is pinned by digest
@@ -133,5 +168,6 @@ COPY run.sh /work/run.sh
 ENTRYPOINT ["bash", "/work/run.sh"]
 ```
 
-run.sh prints the clone's HEAD, runs the manifest's stages, and finishes with
-`git status --porcelain` inside the clone.
+run.sh prints `== git HEAD: <sha>` as its first line, runs the manifest's
+stages, writes the manifest's `results.file` as a two-column `key,value` CSV,
+and finishes with `git status --porcelain` inside the clone.
