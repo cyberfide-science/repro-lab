@@ -1,0 +1,48 @@
+== git HEAD: 4426e4db990db1c511de3b1b9b7a514989663dad
+== python: Python 3.12.14
+== pytest tests/ (the authors' own suite against the committed R DESeq2 v1.34.0 reference CSVs)
+.................................................................        [100%]
+65 passed in 55.14s
+== extract_results.py (repro-lab's own script; public API only)
+Fitting size factors...
+... done in 0.00 seconds.
+
+Fitting dispersions...
+... done in 0.01 seconds.
+
+Fitting dispersion trend curve...
+... done in 0.00 seconds.
+
+Fitting MAP dispersions...
+... done in 0.00 seconds.
+
+Fitting LFCs...
+... done in 0.00 seconds.
+
+Calculating cook's distance...
+... done in 0.00 seconds.
+
+Replacing 0 outlier genes.
+
+Running Wald tests...
+... done in 0.00 seconds.
+
+Using None as control genes, passed at DeseqDataSet initialization
+Log2 fold change & Wald test p-value: condition B vs A
+          baseMean  log2FoldChange     lfcSE      stat    pvalue      padj
+gene1     8.541317        0.632812  0.289101  2.188898  0.028604  0.064150
+gene2    21.281239        0.538552  0.149963  3.591236  0.000329  0.001646
+gene3     5.010123       -0.632830  0.295236 -2.143476  0.032075  0.064150
+gene4   100.517961       -0.412102  0.118629 -3.473868  0.000513  0.001710
+gene5    27.142450        0.582065  0.154706  3.762409  0.000168  0.001646
+gene6     5.413043        0.001457  0.310311  0.004696  0.996253  0.996253
+gene7    28.294023        0.134338  0.149945  0.895917  0.370297  0.411441
+gene8    40.358344       -0.270656  0.136401 -1.984261  0.047227  0.078711
+gene9    37.166183       -0.212715  0.133243 -1.596437  0.110391  0.143147
+gene10   11.589325        0.386011  0.244588  1.578207  0.114518  0.143147
+key,value
+P1_log2FoldChange_gene1,0.632812476644658
+P2_log10_padj_gene2,-2.783684562340294
+P3_size_factor_sample1,1.228980937268269
+P4_top3_genes_by_abs_stat,gene5;gene2;gene4
+== git status --porcelain inside the clone after the run (empty means untouched):

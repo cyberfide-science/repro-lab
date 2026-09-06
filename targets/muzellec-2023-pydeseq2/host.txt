@@ -1,0 +1,83 @@
+# Host description for the untouched run of muzellec-2023-pydeseq2 (2026-09-06)
+# Companion to env-resolved.txt (pip freeze from inside the image).
+
+Host OS:        Windows 11 Pro 10.0.26200
+Container host: Docker Desktop 4.89.0, Engine 29.7.2, platform linux/amd64
+Container kernel (uname -srm inside the image): Linux 6.6.87.2-microsoft-standard-WSL2 x86_64
+CPU:            AMD Ryzen 9 7950X 16-Core Processor (32 logical CPUs visible to Docker Desktop)
+RAM:            31 GB available to Docker Desktop
+GPU:            none
+Base image:     python:3.12-slim @ sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea (Python 3.12.14)
+Image id:       sha256:e544f6ff44378f8334530aac3bb511ffdbb38d920146ecb75ad20773d68c41ff
+
+Thread settings (ENV in the Dockerfile, confirmed inside the container):
+  OMP_NUM_THREADS=1  MKL_NUM_THREADS=1  OPENBLAS_NUM_THREADS=1  PYTHONHASHSEED=0
+
+Seeds (grep -rn 'np\.random|random\.seed|default_rng|RandomState|manual_seed' in the clone):
+  pydeseq2/ (library code): no RNG calls.
+  tests/test_pydeseq2.py:701,735  np.random.seed(42)   (synthetic AnnData fixtures)
+  tests/test_utils.py:23          np.random.default_rng(42)
+  tests/test_edge_cases.py:30,486 np.random.seed(42)
+  The reference pipeline (DeseqDataSet.deseq2 + DeseqStats) is deterministic.
+
+numpy.show_config() from inside the image (numpy 2.5.3):
+Build Dependencies:
+  blas:
+    detection method: pkgconfig
+    found: true
+    include directory: /opt/_internal/cpython-3.12.13/lib/python3.12/site-packages/scipy_openblas64/include
+    lib directory: /opt/_internal/cpython-3.12.13/lib/python3.12/site-packages/scipy_openblas64/lib
+    name: scipy-openblas
+    openblas configuration: OpenBLAS 0.3.34.106.0  USE64BITINT DYNAMIC_ARCH NO_AFFINITY
+      Haswell MAX_THREADS=64
+    pc file directory: /project/.openblas
+    version: 0.3.34.106.0
+  lapack:
+    detection method: pkgconfig
+    found: true
+    include directory: /opt/_internal/cpython-3.12.13/lib/python3.12/site-packages/scipy_openblas64/include
+    lib directory: /opt/_internal/cpython-3.12.13/lib/python3.12/site-packages/scipy_openblas64/lib
+    name: scipy-openblas
+    openblas configuration: OpenBLAS 0.3.34.106.0  USE64BITINT DYNAMIC_ARCH NO_AFFINITY
+      Haswell MAX_THREADS=64
+    pc file directory: /project/.openblas
+    version: 0.3.34.106.0
+Compilers:
+  c:
+    commands: cc
+    linker: ld.bfd
+    name: gcc
+    version: 14.2.1
+  c++:
+    commands: c++
+    linker: ld.bfd
+    name: gcc
+    version: 14.2.1
+  cython:
+    commands: cython
+    linker: cython
+    name: cython
+    version: 3.3.0
+Machine Information:
+  build:
+    cpu: x86_64
+    endian: little
+    family: x86_64
+    system: linux
+  host:
+    cpu: x86_64
+    endian: little
+    family: x86_64
+    system: linux
+Python Information:
+  path: /tmp/build-env-kabtnrrv/bin/python
+  version: '3.12'
+SIMD Extensions:
+  baseline:
+  - X86_V2
+  found:
+  - X86_V3
+  - X86_V4
+  - AVX512_ICL
+  not found:
+  - AVX512_SPR

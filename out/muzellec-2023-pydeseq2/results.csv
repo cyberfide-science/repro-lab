@@ -1,0 +1,5 @@
+key,value
+P1_log2FoldChange_gene1,0.632812476644658
+P2_log10_padj_gene2,-2.783684562340294
+P3_size_factor_sample1,1.228980937268269
+P4_top3_genes_by_abs_stat,gene5;gene2;gene4
