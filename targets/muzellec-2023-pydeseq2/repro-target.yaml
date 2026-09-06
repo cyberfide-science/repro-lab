@@ -85,12 +85,12 @@ data:
   - id: synthetic_counts
     uri: https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_counts.csv
     path: data/pydeseq2/test_counts.csv
-    sha256: "<fill by script>"
+    sha256: 09d632cc7b2792602599793062f980bd5a767afa9757943738263976f0e137c3
     size_bytes: 3919
   - id: synthetic_metadata
     uri: https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_metadata.csv
     path: data/pydeseq2/test_metadata.csv
-    sha256: "<fill by script>"
+    sha256: d96a5bbff013100ecd99ba1b5a3b2e9d54768a4bfc6b6622a5830a59f524f0b6
     size_bytes: 1915
 
 claims:

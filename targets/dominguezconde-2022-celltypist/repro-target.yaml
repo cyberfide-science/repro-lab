@@ -78,7 +78,7 @@ data:
     # This is the input used by the tutorial notebook whose committed outputs are
     # the claim source below.
     path: data/celltypist/demo_2000_cells.h5ad
-    sha256: "<fill by script>"
+    sha256: 167d038d57bc7aee2854f12c3337cc1f58846f4ae7382745639a0957831bae9b
     size_bytes: 35730948
   - id: model_immune_all_low_v2
     uri: https://celltypist.cog.sanger.ac.uk/models/Pan_Immune_CellTypist/v2/Immune_All_Low.pkl
@@ -87,7 +87,7 @@ data:
     # of the mutable models.json indirection. The last-modified date matches the
     # "date: 2022-07-16 00:20:42" the model prints in the tutorial notebook.
     path: data/celltypist/Immune_All_Low.pkl
-    sha256: "<fill by script>"
+    sha256: 290874d35dac039d4c9218c343fde4aac1077709b72a331ce7266f6828c36502
     size_bytes: 2824990
 
 claims:
