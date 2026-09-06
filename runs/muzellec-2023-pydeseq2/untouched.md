@@ -53,3 +53,15 @@ notes: |
   Shell env: MSYS_NO_PATHCONV=1 was set in the host shell purely to stop Git
   Bash rewriting /work/... container paths in docker CLI arguments; it is not
   visible inside the container and changes nothing the pipeline does.
+
+  Fresh-clone test (plan step 6 of the executor brief), 2026-09-06, following
+  only README.md: git clone of this repo at 1634a16 into a scratch directory
+  outside the tree; run.sh checked out as LF; docker build --no-cache exited
+  0 in 56s and produced a new image id sha256:c669b0e4f23ee75c4c45d5eca16abf
+  b11431a0b13bef8f17c17749e837084912 (a rebuild, so a new id; the one above
+  is the recorded run's); the two data files re-fetched by URI and re-hashed
+  by hash_data.py to the same digests (git diff on the manifest empty);
+  docker run exited 0 in 58s with "65 passed in 51.96s", wrote pytest.xml and
+  results.csv with byte-identical claim values, and the clone's git status
+  was empty. pip freeze inside the fresh image is identical to the committed
+  env-resolved.txt (same resolution one hour later). PASS.
