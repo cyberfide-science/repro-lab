@@ -16,8 +16,9 @@ exercises for real is the deviations ledger: both of its deviations appear in
 
 ## The reviewer's "fix" finding on this target
 
-`review.md` in this directory records one target-specific finding of severity
-fix, F-1: the manifest's `deviations[].approved_by` named no person and
+`unit2/docs/reviews/unit2-review-1.md` in the base repository records one
+target-specific finding of severity fix, F-1 (`review.md` in this directory
+carries the latest independent review): the manifest's `deviations[].approved_by` named no person and
 described itself as post-run. It was closed the way the finding asks: the
 manifest was corrected under a fresh commit (`781720a`, 2026-09-06T22:48:40Z)
 before the run that produced the `report.json` and `report.md` now in this

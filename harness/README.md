@@ -91,9 +91,13 @@ else: on every stop (a deviation without `approved_by`, a declined checkpoint,
 a non-zero stage exit, a missing `== git HEAD:` line, a stale results file)
 `run_log.json` carries the stop message in `aborted`, `code_sha` null where
 it was never read, and only the stages that ran, and `results.json` is
-absent. So after any run, complete or stopped, `run_log.json`, `logs/*.log`
-and `results.json` under `work/<slug>/` describe that run alone; a report
-is written only after a complete run. If the SHA differs from the manifest's
+absent. So after any run, complete or stopped, `work/<slug>/run_log.json`
+and `results.json` describe that run alone, together with the logs of the
+stages that `run_log.json` lists; a stage log left from an earlier run may
+remain in `work/<slug>/logs/` after a stop that happened before any stage
+ran. `reports/<slug>/` is written only after a complete run, so after a
+stopped run the committed report can be older than the `work/` beside it;
+compare `generated_at` with `run_log.json`. If the SHA differs from the manifest's
 `code[].commit`, the difference is an `environment_delta` entry whose
 component starts with `code:`.
 
