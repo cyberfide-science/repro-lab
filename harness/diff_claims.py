@@ -72,7 +72,11 @@ overall = "reproduced" if n_ok == len(claims) else ("not_reproduced" if n_ok == 
 
 # The code that ran is the one the container reported; a pin that differs is a finding.
 delta = list(env["delta"])
-code = [c for c in M["code"] if c["role"] in ("package", "pipeline")][0]
+codes = [c for c in M["code"] if c["role"] in ("package", "pipeline")]
+if not codes:
+    sys.exit("[diff_claims] manifest code[] has no entry with role 'package' or 'pipeline'; "
+             "cannot compare the run's code_sha against a pinned commit, stopping")
+code = codes[0]
 if run["code_sha"] != code["commit"]:
     delta.append({"component": f"code:{code['repo']}", "pinned": code["commit"], "actual": run["code_sha"]})
 

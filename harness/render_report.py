@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 """Stage 6: render reports/<slug>/report.json to reports/<slug>/report.md.
-Pure formatting: every number in the Markdown comes from report.json; nothing
-is computed here."""
+Formatting only, with one exception the report template requires: the summary
+line's two integers (claims reproduced, claims total) are counted from
+report.json's claims[]. Every other value in the Markdown is copied from
+report.json; nothing else is computed here."""
 import json, os, sys
-import yaml
 
 if len(sys.argv) != 2:
     print("usage: py -3 harness/render_report.py <slug>", file=sys.stderr)
     sys.exit(2)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SLUG = sys.argv[1]
-M = yaml.safe_load(open(os.path.join(ROOT, "targets", SLUG, "repro-target.yaml"), encoding="utf-8"))
-WORK = os.path.join(ROOT, "work", SLUG)
-os.makedirs(WORK, exist_ok=True)
 os.chdir(ROOT)
 
 r = json.load(open(f"reports/{SLUG}/report.json", encoding="utf-8"))

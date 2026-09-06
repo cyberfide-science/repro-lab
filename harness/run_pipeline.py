@@ -39,6 +39,7 @@ for dev in M.get("deviations") or []:
 
 log = {"started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "code_sha": None, "stages": []}
 os.makedirs(os.path.join(WORK, "logs"), exist_ok=True)
+t_start = time.time()  # the results file must be written after this instant (a committed out/ copy is never scored)
 for st in M["harness"]["stages"]:
     if st["expected_minutes"] > limit:
         approve(f"stage '{st['id']}' expected {st['expected_minutes']} min (> {limit} min limit).")
@@ -46,7 +47,8 @@ for st in M["harness"]["stages"]:
     print(f"[run_pipeline] stage {st['id']}: {' '.join(cmd)}")
     t0 = time.time()
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    entry = {"id": st["id"], "cmd": cmd, "returncode": r.returncode,
+    # The run log keeps the argv as the manifest writes it ({repo_root} unsubstituted): no host path in any evidence file.
+    entry = {"id": st["id"], "cmd": list(st["cmd"]), "returncode": r.returncode,
              "seconds": round(time.time() - t0, 2), "log": f"work/{SLUG}/logs/{st['id']}.log"}
     open(entry["log"], "w", encoding="utf-8", newline="\n").write(r.stdout + r.stderr)
     log["stages"].append(entry)
@@ -60,13 +62,18 @@ first = log["stages"][0]["log"]
 sha = re.search(r"^== git HEAD: ([0-9a-f]{7,40})\s*$",
                 open(first, encoding="utf-8", errors="replace").read(), re.M)
 if not sha:
+    json.dump(log, open(run_log_path, "w", encoding="utf-8", newline="\n"), indent=2)  # code_sha stays null
     sys.exit(f"[run_pipeline] no '== git HEAD:' line in {first}; cannot record code_sha, stopping")
 log["code_sha"] = sha.group(1)
 print(f"[run_pipeline] code_sha from the run's own output: {log['code_sha']}")
 
 # Stage 4: extract results.json from the pipeline's own output; never retype numbers.
+results_file = M["harness"]["results_file"]
+if not os.path.exists(results_file) or os.path.getmtime(results_file) <= t_start:
+    sys.exit(f"[run_pipeline] {results_file} was not written by this run (missing or older than the stage start); "
+             "a results file left over from an earlier run is never scored, stopping")
 metrics = {}
-rows = csv.reader(open(M["harness"]["results_file"], newline="", encoding="utf-8"))
+rows = csv.reader(open(results_file, newline="", encoding="utf-8"))
 next(rows)  # header row (key,value)
 for row in rows:
     v = row[1]
@@ -80,6 +87,6 @@ for row in rows:
     metrics[row[0]] = v
 log["finished_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
 json.dump(log, open(run_log_path, "w", encoding="utf-8", newline="\n"), indent=2)
-json.dump({"source": M["harness"]["results_file"], "metrics": metrics},
+json.dump({"source": results_file, "metrics": metrics},
           open(os.path.join(WORK, "results.json"), "w", encoding="utf-8", newline="\n"), indent=2)
 print(f"[run_pipeline] extracted {len(metrics)} metrics -> work/{SLUG}/results.json")

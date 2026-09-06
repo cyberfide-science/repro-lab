@@ -64,25 +64,36 @@ $ echo $?  ->  0
 |---|---|---|
 | 1 build the environment | `harness/build_env.py` | `work/<slug>/env_actual.json` (image id, base image, container Python, and every difference between `pip freeze` inside the image and `targets/<slug>/env-resolved.txt`) |
 | 2 fetch and verify data | `harness/fetch_verify.py` | `work/<slug>/provenance.json` (uri, expected and actual sha256, bytes, fetched_at, per `data[]` entry; every file is fetched every run) |
-| 3 run the pipeline | `harness/run_pipeline.py` | `work/<slug>/logs/<stage id>.log` and `work/<slug>/run_log.json` (argv, exit code, seconds, and the code SHA read from the container's own `== git HEAD:` line) |
+| 3 run the pipeline | `harness/run_pipeline.py` | `work/<slug>/logs/<stage id>.log` and `work/<slug>/run_log.json` (argv as written in the manifest, `{repo_root}` unsubstituted; exit code; seconds; and the code SHA read from the container's own `== git HEAD:` line) |
 | 4 extract results | `harness/run_pipeline.py` (same script) | `work/<slug>/results.json`, parsed from the `key,value` CSV the container wrote at `harness.results_file`; nothing is retyped |
 | 5 diff claims | `harness/diff_claims.py` | `reports/<slug>/report.json`, validated against `harness/schema/report.schema.json` before it is written |
-| 6 render | `harness/render_report.py` | `reports/<slug>/report.md`, derived from `report.json` and carrying no number the JSON does not |
+| 6 render | `harness/render_report.py` | `reports/<slug>/report.md`, derived from `report.json`. The renderer computes exactly two integers, the summary line's "n of m claims within tolerance" (claims with verdict `reproduced`, claims total), because the report template requires that line; every other value is copied from `report.json` |
 
 The environment is the image, so stage 1 builds `targets/<slug>/Dockerfile`
 (a cached rebuild is correct; a fresh clone builds for real). A package present
 in `env-resolved.txt` and missing from the image is a hard stop; a version
 difference is recorded as an `environment_delta` entry and the run continues.
 The manifest's `environment.python` is a floor, so a delta for `python` is
-emitted only if the container's version is below it.
+emitted only if the container's version is below it. For a Docker target an
+empty delta means the image built for this run resolved to the same package
+versions as `env-resolved.txt`, the freeze recorded when the image was first
+built; it does not mean the upstream project pins those versions itself.
 
 Stage 3 runs the manifest's `harness.stages[]` (one `docker run` per target
 here) as an argv list with no shell; `{repo_root}` in the argv is replaced by
-the absolute, forward-slashed repository root. The container's first stdout
-line, `== git HEAD: <sha>`, is the code SHA the report carries; if that line is
-absent the stage stops and no report is written. If it differs from the
-manifest's `code[].commit`, the difference is an `environment_delta` entry
-whose component starts with `code:`.
+the absolute, forward-slashed repository root for the subprocess only, and
+`run_log.json` records the argv as the manifest writes it, so no evidence
+file holds a host path. The container's first stdout line,
+`== git HEAD: <sha>`, is the code SHA the report carries; if that line is
+absent, `run_log.json` is still written (with `code_sha` null and the stage's
+exit code and log) and then the stage stops, so `work/<slug>/` never mixes two
+runs, and no report is written. If the SHA differs from the manifest's
+`code[].commit`, the difference is an `environment_delta` entry whose
+component starts with `code:`.
+
+Stage 4 refuses to read a results file whose modification time is not later
+than the moment stage 3 started: `out/<slug>/` is committed, so a fresh clone
+starts with an earlier run's copy, and that copy is never scored.
 
 Stage 5 maps the schema-version-1 manifest onto the report: `claims[].value`
 is `claimed`, `harness.claim_keys[id]` is the `metric` key looked up in
@@ -100,6 +111,11 @@ every number in the form the claim states it.
 | Stage duration | `checkpoints.max_stage_minutes` against `harness.stages[].expected_minutes` | 3 | prompt `Proceed? [y/N]`; anything but `y` exits 1 |
 | Unapproved deviation | `deviations[].approved_by` empty | 3 | refuses before any subprocess starts, exit 1 |
 | Out of tolerance | a claim outside its `tolerance` | 5 | prints a `[checkpoint]` line naming the claim; the report is still written and the stage exits 0. It gates outreach, not the run |
+
+The size and duration checkpoints test the manifest's declared values
+(`data[].size_bytes`, `harness.stages[].expected_minutes`) against the limits
+before the fetch or the stage starts; neither compares a measured size or a
+measured duration.
 
 A sha256 mismatch in stage 2 is not a checkpoint but a stop: `MISMATCH` is
 printed, `provenance.json` records both hashes, and the stage exits 1.
@@ -123,6 +139,12 @@ paths it names are resolved by this table:
 | rule 7's `git log -1 --format=%cI -- repro-target.yaml` | `git log -1 --format=%cI -- targets/<slug>/repro-target.yaml` |
 
 The reviewer's verdict for each target is saved as `reports/<slug>/review.md`.
+
+`harness/schema/test_negative.py` differs from the published version in three
+ways: it mutates `claims[0]` (a reproduced claim with a numeric tolerance)
+because neither report holds a `not_reproduced` claim to mutate, it takes the
+report path as its argument instead of assuming one, and it opens files as
+UTF-8.
 
 ## Cost
 
