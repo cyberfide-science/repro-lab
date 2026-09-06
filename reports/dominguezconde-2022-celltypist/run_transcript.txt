@@ -8,7 +8,7 @@ $ py -3 run_all.py dominguezconde-2022-celltypist
 [fetch_verify] demo_cells: 35730948 bytes, sha256 OK
 [fetch_verify] model_immune_all_low_v2: 2824990 bytes, sha256 OK
 [run_pipeline] stage container_run: docker run --rm -v <repo_root>/data:/work/data:ro -v <repo_root>/out/dominguezconde-2022-celltypist:/work/out repro-lab/dominguezconde-2022-celltypist
-[run_pipeline]   exit 0 in 8.16 s; log at work/dominguezconde-2022-celltypist/logs/container_run.log
+[run_pipeline]   exit 0 in 8.33 s; log at work/dominguezconde-2022-celltypist/logs/container_run.log
 [run_pipeline] code_sha from the run's own output: fe357564a6625d3b1732a022fd39f18e55696e80
 [run_pipeline] extracted 4 metrics -> work/dominguezconde-2022-celltypist/results.json
 [diff_claims] 4/4 claims within tolerance -> verdict: reproduced

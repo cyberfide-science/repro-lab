@@ -36,10 +36,11 @@ d88'  "Y8 d88   88b  888   888    888     88.  .8    888   88b  888  d88(  "8   
 ✅ Prediction done!
 == files written to /work/out:
 total 8048
--rw-r--r-- 1 root root    1439 Sep  6 22:18 annotate.log
--rwxrwxrwx 1 root root 3813844 Sep  6 22:18 decision_matrix.csv
--rwxrwxrwx 1 root root   47433 Sep  6 22:18 predicted_labels.csv
--rwxrwxrwx 1 root root 4369666 Sep  6 22:18 probability_matrix.csv
+-rw-r--r-- 1 root root    1439 Sep  6 22:50 annotate.log
+-rwxrwxrwx 1 root root 3813844 Sep  6 22:50 decision_matrix.csv
+-rwxrwxrwx 1 root root   47433 Sep  6 22:50 predicted_labels.csv
+-rwxrwxrwx 1 root root 4369666 Sep  6 22:50 probability_matrix.csv
+-rw-r--r-- 1 root root     100 Sep  6 22:18 results.csv
 == extract_results.py (repro-lab's own script; public API and this run's own log)
 key,value
 T1_n_cell_types,98
