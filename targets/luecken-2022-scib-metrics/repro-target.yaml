@@ -1,0 +1,209 @@
+# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
+# STATUS: candidate. This is the DESIGNATED FALLBACK for the exit criterion.
+# It is attempted ONLY if muzellec-2023-pydeseq2 fails to run untouched. It
+# exists so that outcome needs no new design decision from the executor: the
+# manifest, the claims and the tolerances are already fixed and committed.
+#
+# Relationship to targets/luecken-2022-scib: same paper, different artefact.
+# That manifest reproduces the paper's Snakemake PIPELINE against the figshare
+# data and is expected to fail at the environment build. This one exercises the
+# scib METRICS PACKAGE against the expected values its own maintainers committed
+# in tests/. It is a narrower claim - "the metrics implementation still computes
+# what its authors say it computes" - and it is stated as exactly that, not as
+# a reproduction of the paper's benchmark.
+# Every value below was read from a source opened on 2026-09-06.
+
+schema_version: 1
+slug: luecken-2022-scib-metrics
+status: candidate
+
+paper:
+  title: Benchmarking atlas-level data integration in single-cell genomics
+  doi: 10.1038/s41592-021-01336-8
+  journal: Nature Methods
+  year: 2022
+  first_author: Luecken
+  last_author: Theis
+  url: https://doi.org/10.1038/s41592-021-01336-8
+
+code:
+  - role: package
+    repo: https://github.com/theislab/scib
+    # Verified 2026-09-06 with gh api repos/theislab/scib/commits/cd679133...
+    # -> sha matches, date 2026-04-27T20:10:39Z, message
+    #    "chore(main): release 1.2.1 (#434)". Same SHA as in the sibling manifest.
+    commit: cd67913396b4c0430710b3d90f1d1841f5fa4468
+    licence: MIT           # gh api repos/theislab/scib -> spdx_id MIT; LICENSE.txt (1052 bytes) in the tree at this SHA
+    entrypoint: pytest -m "not slow" --ignore=tests/integration/ --ignore=tests/metrics/rpy2 -vv
+
+environment:
+  kind: docker
+  spec: Dockerfile
+  python: "3.11"           # floor from pyproject.toml at cd67913: requires-python = ">=3.11"
+  notes: >
+    No Dockerfile and no lock file in the tree at cd67913 (GitHub trees API,
+    2026-09-06: LICENSE.txt, pyproject.toml, .github/workflows/test.yml and
+    deployment.yml are the only matches for those patterns). pyproject.toml
+    declares lower bounds only - numpy, pandas>=2, seaborn, matplotlib, numba,
+    scanpy>=1.5, anndata>=0.7.2, h5py, scipy, scikit-learn, scikit-misc,
+    leidenalg, umap-learn, pydot, igraph>=0.10, llvmlite, deprecated, zarr,
+    setuptools - so the same C3 caveat applies as everywhere else in this set:
+    resolve once in the image, dump env-resolved.txt, and treat the resolved
+    list as the record of what ran.
+
+    Note for the executor: tests/common.py at cd67913 sets CORES = "1", which
+    agrees with the brief's section 5 instruction to pin OMP_NUM_THREADS,
+    MKL_NUM_THREADS and OPENBLAS_NUM_THREADS to 1 in the image. Set them anyway;
+    the package setting its own does not cover BLAS calls made outside it.
+
+    The R-backed metrics are excluded by the entrypoint's own --ignore flags,
+    which are copied verbatim from the project's .github/workflows/test.yml.
+    That is the maintainers' own CI invocation, not a narrowing invented here.
+
+data:
+  # The test fixtures in tests/conftest.py at cd67913 call sc.datasets.paul15(),
+  # sc.datasets.pbmc3k_processed() and sc.datasets.pbmc68k_reduced(). The first
+  # two download at test time; the third is bundled in the scanpy wheel.
+  # URLs and the upstream sha256 values were read on 2026-09-06 from
+  #   https://raw.githubusercontent.com/scverse/scanpy/main/src/scanpy/datasets/registry.yaml
+  # (1930 bytes). CAVEAT, recorded rather than glossed: that registry was read
+  # from the MOVING main branch of scverse/scanpy, not a pinned SHA, because it
+  # is scanpy's file and not this target's. If the executor finds different
+  # bytes, that is a finding about scanpy's hosting, not about scib.
+  # Sizes below are content-length values the planner measured with curl -sIL.
+  - id: pbmc3k_processed
+    uri: https://exampledata.scverse.org/scanpy/pbmc3k.h5ad
+    # HTTP 200, Content-Length 24653425.
+    # registry.yaml publishes sha256
+    #   0db367b991dd95809732b218539ede489bea99113807f62ebd7ccc970025fe38
+    # Do NOT paste that in by hand - run hash_data.py and check the two agree.
+    # Fallback URL in the registry:
+    #   https://raw.githubusercontent.com/chanzuckerberg/cellxgene/main/example-dataset/pbmc3k.h5ad
+    path: data/scib-metrics/pbmc3k_processed.h5ad
+    sha256: "<fill by script>"
+    size_bytes: 24653425
+  - id: paul15
+    uri: https://exampledata.scverse.org/scanpy/paul15.h5
+    # HTTP 200, Content-Length 10297693.
+    # registry.yaml publishes sha256
+    #   6161984f758dd464992edc23f1a8ab89b2081600130c6aa93a1ab12b3ada5bfb
+    # Fallback URL in the registry: https://falexwolf.de/data/paul15.h5
+    path: data/scib-metrics/paul15.h5
+    sha256: "<fill by script>"
+    size_bytes: 10297693
+  - id: pbmc68k_reduced
+    uri: https://github.com/scverse/scanpy/raw/main/src/scanpy/datasets/10x_pbmc68k_reduced.zarr.zip
+    # Bundled inside the scanpy wheel, so the run does not fetch it; listed here
+    # for provenance. Size 1733874 bytes, reported by the GitHub contents API.
+    path: data/scib-metrics/10x_pbmc68k_reduced.zarr.zip
+    sha256: "<fill by script>"
+    size_bytes: 1733874
+
+claims:
+  # Pre-registered 2026-09-06, BEFORE any run. All four values, and the tolerance,
+  # were read first-hand by the planner from the repo at cd67913 via
+  # raw.githubusercontent.com.
+  # Tolerance provenance: 1e-2 is NOT chosen here. It is the diff the maintainers
+  # themselves assert at, and tests/common.py at the same SHA defines the
+  # comparison as "assert abs(x - y) <= diff", i.e. ABSOLUTE. That is tolerance
+  # source 1 - the authors' own stated precision - and it also settles
+  # tolerance_type without guesswork.
+  # These are metrics bounded in [0,1], so absolute is the right type per the
+  # brief's section 4.2 regardless.
+  - id: S1
+    figure: "n/a - expected value committed in the repo's test suite, not a paper figure"
+    panel: null
+    metric: NMI, optimal-resolution Leiden cluster vs celltype, pbmc3k_processed + pbmc68k_reduced fixture
+    value: 0.7424614219722735
+    tolerance: 0.01
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      theislab/scib@cd67913 tests/metrics/test_cluster_metrics.py, def test_nmi,
+      line 23: assert_near_exact(score, 0.7424614219722735, diff=1e-2).
+  - id: S2
+    figure: "n/a - expected value committed in the repo's test suite"
+    panel: null
+    metric: ARI, same clustering and fixture as S1
+    value: 0.7614422905830917
+    tolerance: 0.01
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      theislab/scib@cd67913 tests/metrics/test_cluster_metrics.py, def test_ari,
+      line 29: assert_near_exact(score, 0.7614422905830917, diff=1e-2).
+  - id: S3
+    figure: "n/a - expected value committed in the repo's test suite"
+    panel: null
+    metric: cLISI (scaled), type_="full"
+    value: 0.975
+    tolerance: 0.01
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      theislab/scib@cd67913 tests/metrics/test_clisi.py, def test_clisi_full,
+      line 16: assert_near_exact(score, 0.975, diff=1e-2).
+  - id: S4
+    figure: "n/a - expected value committed in the repo's test suite"
+    panel: null
+    metric: cLISI (scaled), PCA embedding and kNN graph
+    value: 0.982
+    tolerance: 0.01
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      theislab/scib@cd67913 tests/metrics/test_clisi.py, def test_clisi_embed
+      line 30 and def test_clisi_knn line 43, both
+      assert_near_exact(score, 0.982, diff=1e-2).
+
+checkpoints:
+  max_download_gb: 5     # total fetch here is 36,684,992 bytes; this will not fire
+  max_stage_minutes: 90
+
+deviations: []
+
+stages:
+  - id: metrics_suite
+    # Copied verbatim from the project's own .github/workflows/test.yml at cd67913,
+    # plus --junitxml so the run leaves a machine-readable artefact.
+    cmd: ["pytest", "-m", "not slow", "--ignore=tests/integration/",
+          "--ignore=tests/metrics/rpy2", "-vv", "--junitxml=/work/out/pytest.xml"]
+    expected_minutes: 45
+results:
+  file: "out/pytest.xml"
+
+selection:
+  C1: {score: 2, justification: "the three fixtures resolve to https://exampledata.scverse.org/scanpy/pbmc3k.h5ad and .../paul15.h5 plus a wheel-bundled zarr, all public with no login and each carrying a published sha256 in https://raw.githubusercontent.com/scverse/scanpy/main/src/scanpy/datasets/registry.yaml; scored 2 for stability and openness, though these are scanpy example datasets rather than a DOI'd deposit for this paper"}
+  C2: {score: 2, justification: "gh api repos/theislab/scib -> spdx_id MIT; LICENSE.txt (1052 bytes) in the tree at cd67913"}
+  C3: {score: 1, justification: "pyproject.toml at cd67913 declares lower bounds only (pandas>=2, scanpy>=1.5, anndata>=0.7.2, igraph>=0.10, requires-python >=3.11) with no lock file and no Dockerfile in the tree"}
+  C4: {score: 2, justification: "four expected metric values are hard-coded in the repo at cd67913 - tests/metrics/test_cluster_metrics.py lines 23 and 29, tests/metrics/test_clisi.py lines 16, 30 and 43 - with the comparison defined in tests/common.py as abs(x-y) <= diff"}
+  C5: {score: 2, justification: "Nature Methods 19, 41-50 (2022); Crossref for 10.1038/s41592-021-01336-8 gives issued 2021-12-23, print 2022-01"}
+  C6: {score: 1, justification: "mumichae released v1.2.0 and v1.2.1 on 2026-04-24 and 2026-04-27, so the package is maintained, but issue 435 (opened 2026-04-28) has one comment dated 2026-08-05 from AlbertoFabbri93 with author_association NONE and no maintainer reply; the last COLLABORATOR replies on issue 325 are from July 2022"}
+  C7: {score: 2, justification: "pure Python package; rpy2-backed metrics are opt-in extras and the entrypoint uses the project's own --ignore=tests/metrics/rpy2 flag"}
+  C8: {score: 2, justification: "36,684,992 bytes of fixture data across three files (content-lengths verified) and the maintainers run this same suite on a 2-core GitHub-hosted runner with no GPU"}
+  total: 14
+
+notes: >
+  GATE: PASSES. Total 14, no zero in C1-C4.
+
+  Expected untouched outcome: YES. Evidence, all pre-run: the entrypoint is the
+  project's own CI invocation copied verbatim from .github/workflows/test.yml at
+  the pinned SHA; that workflow runs on every push to main on a stock
+  ubuntu-latest image; the fixtures download under 37 MB from URLs that publish
+  their own sha256; and no step needs R, a GPU, or Docker-in-Docker.
+
+  This manifest's job in the set is insurance. If muzellec-2023-pydeseq2 runs
+  untouched, this one stays status: candidate and is not attempted in Unit 1.
+  If PyDESeq2 fails - the most likely cause being its filterwarnings = ["error"]
+  setting tripping on a new transitive dependency - the executor runs this
+  instead, with no new decisions to make, and the exit criterion is still met by
+  a real paper's real code.
+
+  Scope honesty, which the reviewer should hold this to. Passing this suite does
+  NOT reproduce the paper's benchmark. The paper's numbers are the 465 rows of
+  scib-reproducibility's data/metrics.csv, computed by the Snakemake pipeline on
+  the figshare atlases; the sibling manifest targets/luecken-2022-scib is the one
+  that attempts those and is expected to fail. What this manifest establishes is
+  narrower and should be reported as such: the metrics implementation underneath
+  the paper still returns the values its maintainers pinned. Any report that
+  blurs the two would be exactly the overclaim this track is built to prevent.

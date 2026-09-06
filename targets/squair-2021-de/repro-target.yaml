@@ -1,0 +1,152 @@
+# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
+# STATUS: deferred. This target is NOT attempted in Unit 1.
+# It fails the brief's section 2 gate: zeros on C2 (no LICENSE in the analysis
+# repo) and C3 (no environment file of any kind), both inside the first four
+# criteria. The brief (section 3.2) reaches the same conclusion and says to keep
+# the manifest as a record of the cost being declined.
+# Every value below was read from a source opened on 2026-09-06; the URL or API
+# call is named in the justification or in the comment beside it.
+
+schema_version: 1
+slug: squair-2021-de
+status: deferred
+
+paper:
+  title: Confronting false discoveries in single-cell differential expression
+  doi: 10.1038/s41467-021-25960-2
+  journal: Nature Communications
+  year: 2021
+  first_author: Squair
+  last_author: Courtine
+  url: https://doi.org/10.1038/s41467-021-25960-2
+
+code:
+  - role: pipeline
+    repo: https://github.com/neurorestore/DE-analysis
+    # Verified 2026-09-06 with
+    #   gh api repos/neurorestore/DE-analysis/commits/167f55a5bff09f23cfd5b535763e13db2bc278b3
+    # -> sha matches, date 2021-08-04T17:18:41Z, message "publish code".
+    commit: 167f55a5bff09f23cfd5b535763e13db2bc278b3
+    licence: none          # gh api repos/neurorestore/DE-analysis -> license null; no LICENSE blob in the tree at this SHA
+    entrypoint: Rscript R/analysis/run_DE/outer-run-DE.R    # fans out over all 51 labels in R/functions/datasets.R
+  - role: package
+    repo: https://github.com/neurorestore/Libra
+    # The paper's Code availability section (read from the Europe PMC full text
+    # XML for PMC8479118) names Libra as the DE implementation.
+    # Licence verified 2026-09-06: gh api repos/neurorestore/Libra -> MIT.
+    # Commit deliberately NOT pinned: this target is not attempted, so nothing
+    # was checked out and no SHA may be presented as one that was.
+    commit: "<fill: pin only if this target is ever attempted>"
+    licence: MIT
+  - role: package
+    repo: https://github.com/jordansquair/squair_seurat
+    # R/functions/run_DE.R names github.com/jordansquair/Seurat, which the brief
+    # (section 3.2) reports redirects here. The planner did NOT re-verify that
+    # redirect or the SHA this session, because the target is deferred.
+    commit: "<fill: unverified; the Unit 1 brief quotes b25dea94cc572eed07dc191225014865b29aee1e>"
+    licence: GPL-3.0
+
+environment:
+  kind: docker
+  spec: "<fill: no Dockerfile written; target not attempted>"
+  python: none
+  notes: >
+    No environment file of any kind exists in the repo. The tree at 167f55a is
+    .gitignore, R/ and README.md only (verified via the GitHub trees API on
+    2026-09-06). Reconstructing the environment means resolving R 4.x plus an
+    unpinned GPL-3.0 fork of Seurat. That is exactly the "extra week of
+    environment archaeology" the brief's section 2 exclusion list warns about,
+    and it is the cost being explicitly declined here.
+
+data:
+  - id: ground_truth_zenodo
+    uri: https://doi.org/10.5281/zenodo.5048449
+    # From the Data availability section of the paper, read from
+    # https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8479118/fullTextXML
+    # on 2026-09-06: "The 18 'ground truth' datasets ... are available from
+    # Zenodo at 10.5281/zenodo.5048449". DataCite metadata for that DOI confirms
+    # the title, publication year 2021 and licence cc-by-4.0.
+    path: data/squair-2021-de/<fill: file names unknown; zenodo.org returned HTTP 403 to this network on 2026-09-06>
+    sha256: "<fill by script>"
+    size_bytes: "<fill: DataCite returned an empty sizes[]; zenodo.org/records/5048449 returned 403>"
+  - id: geo_raw
+    uri: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE165003
+    # Same Data availability section: "Raw sequencing data and count matrices
+    # have been deposited to the Gene Expression Omnibus under accession code
+    # GSE165003."
+    path: data/squair-2021-de/<fill>
+    sha256: "<fill by script>"
+    size_bytes: "<fill>"
+
+claims:
+  # Pre-registered 2026-09-06, before any run, per brief section 4.2. This target
+  # is not run in Unit 1; the tolerances are fixed now so that if it is ever
+  # promoted, they provably predate the first run.
+  # Source for all three: the paper's Source Data workbook
+  # 41467_2021_25960_MOESM5_ESM.xlsx (126,498 bytes), which the planner confirmed
+  # is present in the archive returned by
+  # https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8479118/supplementaryFiles
+  # on 2026-09-06. The planner LISTED that archive but did NOT open the workbook,
+  # so the metric names and values below are honest placeholders, not numbers
+  # transcribed from a source. Do not present them as claims until transcribed.
+  - figure: "<fill: transcribe from the Source Data workbook before any run>"
+    panel: "<fill>"
+    metric: "<fill: e.g. AUCC, pseudobulk vs single-cell, named dataset>"
+    value: "<fill>"
+    tolerance: 0.02
+    tolerance_type: absolute
+    source: 41467_2021_25960_MOESM5_ESM.xlsx (Source Data, PMC8479118)
+  - figure: "<fill>"
+    panel: "<fill>"
+    metric: "<fill: number of DE genes called in a null comparison>"
+    value: "<fill>"
+    tolerance: 0.10
+    tolerance_type: relative
+    source: 41467_2021_25960_MOESM5_ESM.xlsx (Source Data, PMC8479118)
+  - figure: "<fill>"
+    panel: "<fill>"
+    metric: "<fill: ordering of DE methods by AUCC>"
+    value: "<fill: list>"
+    tolerance: 1
+    tolerance_type: rank-order
+    source: 41467_2021_25960_MOESM5_ESM.xlsx (Source Data, PMC8479118)
+
+# Forward-compat with Unit 2 section 7.2. Unit 1 uses only max_download_gb;
+# the brief's section 9.1 fixes it at 5 for this unit.
+checkpoints:
+  max_download_gb: 5
+  max_stage_minutes: 240
+
+# Forward-compat with Unit 2 section 7.2. Empty because nothing was run and
+# nothing was changed. An entry here needs what / why / approved_by / date.
+deviations: []
+
+selection:
+  C1: {score: 2, justification: "GEO GSE165003 and Zenodo 10.5281/zenodo.5048449, both open with no data-use agreement; read from the Data availability section of https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8479118/fullTextXML"}
+  C2: {score: 0, justification: "gh api repos/neurorestore/DE-analysis returns license null, and the recursive tree at 167f55a contains no LICENSE blob"}
+  C3: {score: 0, justification: "the recursive tree at 167f55a is .gitignore, R/ and README.md only - no renv.lock, no conda YAML, no Dockerfile (GitHub trees API)"}
+  C4: {score: 2, justification: "41467_2021_25960_MOESM5_ESM.xlsx (126,498 bytes) is in the archive from https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8479118/supplementaryFiles"}
+  C5: {score: 2, justification: "Nature Communications 2021; the DOI resolves in Europe PMC as PMC8479118"}
+  C6: {score: 1, justification: "skinnider and jordansquair reply as COLLABORATOR on issues 6, 7, 11 and 13 (gh api repos/neurorestore/DE-analysis/issues/<n>/comments) but the latest reply is 2024-06-28, more than a year before 2026-09-06"}
+  C7: {score: 0, justification: "R only, and R/functions/run_DE.R depends on a fork of Seurat at github.com/jordansquair/Seurat (brief section 3.2)"}
+  C8: {score: 1, justification: "R/functions/datasets.R lists 51 dataset labels and the outer-*.R scripts fan out over all of them; a one-dataset slice is feasible, the published analysis is not. Zenodo record size unverified - zenodo.org returned HTTP 403 to this network on 2026-09-06"}
+  total: 8
+
+notes: >
+  GATE: FAILS. Total 8, below the threshold of 11, with zeros on C2 and C3 inside
+  the first four criteria. Not attempted in Unit 1.
+
+  What changed against the brief's section 3.2 scoring. The brief left C1, C4, C6
+  and C8 as "?" and gave a range of 2-10. All four were closed this session, so
+  the total is now a definite 8 - still a fail, but for recorded reasons rather
+  than assumed ones. C1 rose from ? to 2 because the paper names GEO GSE165003
+  and a Zenodo DOI. C4 rose from ? to 2 because a Source Data workbook exists and
+  is downloadable from Europe PMC. C6 is 1: the lab genuinely answers issues, but
+  the most recent maintainer reply is over a year old. C8 is 1. C2 also differs in
+  emphasis from the brief: the brief pairs the C2 zero with C7; the operative
+  second zero is C3, since C7 sits outside the first four criteria.
+
+  Accepted cost if this is ever promoted (the brief suggests Unit 5): an
+  unpinned GPL-3.0 Seurat fork must be built from source, an R environment must
+  be reconstructed from nothing, and the redistribution position for a fixed fork
+  is legally murky because the analysis repo carries no licence at all.

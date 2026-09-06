@@ -1,0 +1,238 @@
+# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
+# STATUS: selected. This is the target expected to CARRY THE EXIT CRITERION:
+# one paper's code running end to end in a fresh container from this manifest,
+# with no manual steps outside it and no edit to the cloned repo.
+# Every value below was read from a source opened on 2026-09-06; the URL or API
+# call is named in the comment or justification beside it.
+
+schema_version: 1
+slug: muzellec-2023-pydeseq2
+status: selected
+
+paper:
+  title: "PyDESeq2: a python package for bulk RNA-seq differential expression analysis"
+  doi: 10.1093/bioinformatics/btad547
+  journal: Bioinformatics
+  year: 2023
+  first_author: Muzellec
+  last_author: Andreux
+  url: https://doi.org/10.1093/bioinformatics/btad547
+  # Publication date and open-access status confirmed 2026-09-06 via Europe PMC:
+  # https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI:%2210.1093/bioinformatics/btad547%22
+  # -> firstPublicationDate 2023-09-01, PMC10502239, open access.
+
+code:
+  - role: package
+    repo: https://github.com/owkin/PyDESeq2
+    # Verified 2026-09-06 with
+    #   gh api repos/owkin/PyDESeq2/commits/4426e4db990db1c511de3b1b9b7a514989663dad
+    # -> sha matches, date 2026-01-23T14:08:59Z, message
+    #    "Add trusted publishing workflow (#438)".
+    # This is the commit behind release tag v0.5.4 (published 2026-01-23T14:16:04Z).
+    # Chosen deliberately over the HEAD of main (78be6d0558adfca754bfb7217e8416c0276bd612,
+    # 2026-09-06T19:19:14Z): main moved on the day this manifest was written, and a
+    # released commit is better provenance than a same-day HEAD. Both were checked
+    # and the reference CSVs used for the claims below are byte-identical at each.
+    commit: 4426e4db990db1c511de3b1b9b7a514989663dad
+    licence: MIT           # gh api repos/owkin/PyDESeq2 -> spdx_id MIT; LICENSE (1062 bytes) in the tree at this SHA
+    entrypoint: pytest tests/
+
+environment:
+  kind: docker
+  spec: Dockerfile
+  python: "3.11"           # floor from pyproject.toml at 4426e4db: requires-python = ">=3.11"
+  notes: >
+    There is NO Dockerfile and NO lock file in the repo. The tree at 4426e4db was
+    listed via the GitHub trees API on 2026-09-06 and contains neither, nor a
+    root requirements.txt. What it does contain is pyproject.toml (2991 bytes)
+    whose runtime dependencies are, verbatim:
+
+      requires-python = ">=3.11"
+      anndata>=0.11.0, formulaic>=1.0.2, numpy>=2.0.0, pandas>=2.2.0,
+      scikit-learn>=1.4.0, scipy>=1.12.0, formulaic-contrasts>=0.2.0,
+      matplotlib>=3.9.0
+
+    Every runtime constraint is an open lower bound, so the resolution is not
+    reproducible by itself. That is why the environment kind is docker: the
+    Dockerfile the executor writes lives in repro-lab (NOT in the paper's repo),
+    resolves once at build time, and the resolved set is dumped to
+    env-resolved.txt per brief section 5. Writing our own Dockerfile is not a
+    deviation - the brief's section 5 requires one - but pinning a dependency to
+    a version the project does not pin IS a choice, and the resolved list is the
+    record of what was actually run.
+
+    One live hazard, found before the run and recorded rather than worked around:
+    pyproject.toml sets filterwarnings = ["error"], so a DeprecationWarning
+    emitted by any newer transitive dependency will fail the suite. If that is
+    what the run prints, it is a real finding about the pinning gap, not a bug to
+    patch. Do not add a filterwarnings override.
+
+    A second, smaller one: .binder/requirements.txt is a 23-byte file containing
+    only "-r ../requirements.txt", and no requirements.txt exists in the tree.
+    Binder builds from this commit are broken. It does not affect the pytest
+    path and must not be fixed here.
+
+data:
+  # Both files ship inside the repo. They are listed here with their immutable
+  # raw.githubusercontent URLs at the pinned SHA so there is a fetchable, stable
+  # URI and a hash of record, exactly as the brief's section 5 asks. Sizes were
+  # measured on 2026-09-06 with curl -o /dev/null -w %{size_download}.
+  # At run time pydeseq2.utils.load_example_data resolves the package-relative
+  # path and reads the clone's own copy, so the run itself needs no network. The
+  # point of hashing the fetched copy is to prove which bytes the pinned SHA
+  # carries; the executor should confirm the fetched file and the clone's file
+  # have the same sha256 and record it if they do not.
+  - id: synthetic_counts
+    uri: https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_counts.csv
+    path: data/pydeseq2/test_counts.csv
+    sha256: "<fill by script>"
+    size_bytes: 3919
+  - id: synthetic_metadata
+    uri: https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/datasets/synthetic/test_metadata.csv
+    path: data/pydeseq2/test_metadata.csv
+    sha256: "<fill by script>"
+    size_bytes: 1915
+
+claims:
+  # Pre-registered 2026-09-06, BEFORE any run, per brief section 4.2.
+  # All values were read first-hand by the planner from
+  #   https://raw.githubusercontent.com/owkin/PyDESeq2/4426e4db990db1c511de3b1b9b7a514989663dad/tests/data/single_factor/r_test_res.csv
+  #   (1225 bytes, 11 lines: header + gene1..gene10)
+  # and .../r_test_size_factors.csv (2838 bytes).
+  # What these numbers ARE: tests/data/README.md at the same SHA states the files
+  # "contain the outputs of DESeq2 (v1.34.0) on the synthetic data provided in
+  # /datasets/synthetic/, ... using ~condition". So the claim under test is the
+  # paper's central claim - that the Python reimplementation reproduces R DESeq2 -
+  # checked against the authors' own committed reference outputs.
+  #
+  # Tolerance provenance: 0.02 relative is NOT invented here. It is the tolerance
+  # the authors themselves assert at, read from tests/test_pydeseq2.py at the same
+  # SHA: "def assert_res_almost_equal(py_res, r_res, tol=0.02)" (and line 218,
+  # "assert (abs(r_res.stat - ds.results_df.stat) / abs(r_res.stat)).max() < tol").
+  # That is tolerance source 1 - the authors' own stated precision - which the
+  # Unit 2 guide ranks above any guess of ours.
+  - id: P1
+    figure: "n/a - reference output committed in the repo, not a paper figure"
+    panel: null
+    metric: log2FoldChange, gene1, synthetic single_factor, design ~condition
+    value: 0.632812315254828
+    tolerance: 0.02
+    tolerance_type: relative
+    extraction: manual
+    source: >
+      owkin/PyDESeq2@4426e4db tests/data/single_factor/r_test_res.csv line 2,
+      column log2FoldChange. Tolerance copied from the repo's own
+      assert_res_almost_equal(tol=0.02) in tests/test_pydeseq2.py.
+  - id: P2
+    figure: "n/a - reference output committed in the repo"
+    panel: null
+    metric: log10(padj), gene2, synthetic single_factor, design ~condition
+    value: -2.783680
+    tolerance: 0.3
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      owkin/PyDESeq2@4426e4db tests/data/single_factor/r_test_res.csv line 3,
+      column padj = 0.00164558241101406; log10 of that is -2.783680, computed by
+      the planner on 2026-09-06. Stated as log10 with an absolute tolerance of
+      0.3 (about a factor of two) because the brief's section 4.2 gives p-values
+      their own rule: a relative tolerance on a p-value is meaningless.
+  - id: P3
+    figure: "n/a - reference output committed in the repo"
+    panel: null
+    metric: size_factor, sample1, synthetic single_factor
+    value: 1.22898093726827
+    tolerance: 0.02
+    tolerance_type: relative
+    extraction: manual
+    source: >
+      owkin/PyDESeq2@4426e4db tests/data/single_factor/r_test_size_factors.csv
+      line 2. This is DESeq2's estimateSizeFactors output (tests/data/README.md).
+  - id: P4
+    figure: "n/a - reference output committed in the repo"
+    panel: null
+    metric: ordering of genes by |Wald statistic| descending, top three, synthetic single_factor
+    value: [gene5, gene2, gene4]
+    tolerance: 0
+    tolerance_type: rank-order
+    extraction: manual
+    source: >
+      owkin/PyDESeq2@4426e4db tests/data/single_factor/r_test_res.csv, column
+      stat: gene5 = 3.76180936761674, gene2 = 3.59123359591895, gene4 =
+      -3.47390293910522 (|stat| = 3.4739). Ordered by absolute value these are
+      the three largest and they are separated by 0.17 and 0.12, comfortably
+      outside the 0.02 relative agreement the authors assert, so tolerance 0
+      (ordering exactly preserved) is a fair test rather than a coin flip.
+      Deliberately NOT ordered by padj: gene2 and gene5 are tied at
+      0.00164558241101406 in that column, and a tie makes a rank-order claim
+      meaningless. Deliberately NOT ordered by |log2FoldChange| either: gene3
+      (-0.632831858568865) and gene1 (0.632812315254828) differ by 2e-5 there.
+
+# Forward-compat with Unit 2 section 7.2. max_download_gb is the brief's
+# section 9.1 threshold. Total fetch here is 5,834 bytes, so this checkpoint
+# will not fire - which is the point of choosing this target.
+checkpoints:
+  max_download_gb: 5
+  max_stage_minutes: 30
+
+# Forward-compat with Unit 2 section 7.2. MUST stay empty for this target: if
+# anything under the clone had to change to make the run work, the untouched
+# answer is "no" and that is the result to record.
+deviations: []
+
+# Forward-compat with Unit 2 section 7.2.
+stages:
+  - id: reference_suite
+    cmd: ["pytest", "tests/", "-q", "--junitxml=/work/out/pytest.xml"]
+    expected_minutes: 5
+  - id: extract
+    # extract_results.py lives in repro-lab (targets/<slug>/), NOT in the clone.
+    # It calls only pydeseq2's documented public API on the repo's shipped
+    # synthetic data - the same sequence as examples/plot_minimal_pydeseq2_pipeline.py,
+    # whose own SAVE flag is hard-coded False at 4426e4db, so that example cannot
+    # write a results file without being edited. Writing our own extractor is the
+    # way to get a results file WITHOUT editing the paper's repo.
+    cmd: ["python", "/work/extract_results.py", "--out", "/work/out/results.csv"]
+    expected_minutes: 2
+results:
+  file: "out/results.csv"        # key,value CSV: the four metrics named in claims[]
+
+selection:
+  C1: {score: 1, justification: "No deposited data record. The synthetic count matrix (datasets/synthetic/test_counts.csv, 3919 bytes) and the R DESeq2 reference outputs ship in the repo and are identified only by the pinned git SHA - stable and public, but not a DOI or accession. The paper's applied datasets are TCGA via the GDC portal with no accession list in the repo or the PMC full text (https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10502239/fullTextXML)"}
+  C2: {score: 2, justification: "gh api repos/owkin/PyDESeq2 -> spdx_id MIT; LICENSE (1062 bytes) present in the tree at 4426e4db"}
+  C3: {score: 2, justification: "No lock file and no Dockerfile in the tree at 4426e4db, but pyproject.toml declares a resolvable dependency set with a requires-python floor of 3.11, which can be frozen today and dumped to env-resolved.txt; the project's own CI does exactly this (uv pip freeze)"}
+  C4: {score: 2, justification: "39 committed R DESeq2 v1.34.0 reference CSVs under tests/data/, e.g. tests/data/single_factor/r_test_res.csv (1225 bytes, gene1..gene10 with baseMean/log2FoldChange/lfcSE/stat/pvalue/padj), asserted against by tests/test_pydeseq2.py at tol=0.02 - the strongest possible form of C4, an offline machine-readable ground truth"}
+  C5: {score: 2, justification: "Bioinformatics 2023; Europe PMC gives firstPublicationDate 2023-09-01 for DOI 10.1093/bioinformatics/btad547"}
+  C6: {score: 2, justification: "gh api repos/owkin/PyDESeq2/issues/comments shows Zethson (MEMBER) and maltekuehl (COLLABORATOR) both replying on issue 412 on 2026-07-14, within the last year; the repo was pushed to on 2026-09-06"}
+  C7: {score: 2, justification: "pyproject.toml runtime dependencies at 4426e4db are anndata, formulaic, numpy, pandas, scikit-learn, scipy, formulaic-contrasts, matplotlib - pure Python, no rpy2, no R"}
+  C8: {score: 2, justification: "The whole reproducible unit is 5,834 bytes of shipped CSV (10 genes x 100 samples) plus 39 reference CSVs of at most 18,125 bytes each; single-core seconds to minutes, no GPU"}
+  total: 15
+
+notes: >
+  GATE: PASSES. Total 15, no zero in C1-C4. Highest-scoring candidate in this set.
+
+  Expected untouched outcome: YES. This is the target chosen to carry the Unit 1
+  exit criterion. The reasoning, all of it checkable before the run: the paper's
+  code is a pip-installable pure-Python package; its verification data ships in
+  the repo, so the run needs no network; its reference values are committed CSVs
+  produced by R DESeq2 v1.34.0; and the authors' own test suite is the end-to-end
+  entrypoint, so nothing has to be written into the clone to exercise it.
+
+  Honest weaknesses, stated up front rather than discovered later. C1 is 1, not
+  2: there is no deposited data record, and a reviewer is entitled to say that a
+  target whose data lives in its own git tree is an easier problem than one whose
+  data lives on figshare. It is chosen anyway because Unit 1's exit criterion is
+  about proving the container-plus-manifest loop closes at all, and this is the
+  candidate where that can actually be demonstrated rather than asserted. The
+  scIB manifest in this same set is the one that carries the hard data problem.
+
+  The second weakness is the pinning gap: every runtime dependency is an open
+  lower bound and pyproject.toml sets filterwarnings = ["error"]. A future
+  resolution can therefore break the suite through no fault of the code. If that
+  happens on this run, it is the finding, and env-resolved.txt is the evidence.
+
+  Governance note for the reviewer: PyDESeq2's README states that in December
+  2025 maintenance was taken over by the scverse community. The C6 replies above
+  are from scverse maintainers, not from the paper's author list. That is
+  genuine engagement and scores as such, but it is not the same thing as the
+  original authors answering, and it matters for Unit 6-style outreach.

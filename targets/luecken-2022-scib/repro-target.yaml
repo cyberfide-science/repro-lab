@@ -1,0 +1,216 @@
+# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
+# STATUS: selected. This target IS attempted, and it is expected to FAIL.
+# It is selected because it is the paper the track cares about and because a
+# recorded, specific, first-error failure is the Unit 1 deliverable for it
+# (brief section 6: "A 'no' is a valid Unit 1 result for two of the three
+# candidates"). The exit criterion - one target that runs untouched end to end -
+# is carried by a different manifest in this set, not by this one.
+# Every value below was read from a source opened on 2026-09-06; the URL or API
+# call is named in the comment or justification beside it.
+
+schema_version: 1
+slug: luecken-2022-scib
+status: selected
+
+paper:
+  title: Benchmarking atlas-level data integration in single-cell genomics
+  doi: 10.1038/s41592-021-01336-8
+  journal: Nature Methods
+  year: 2022
+  first_author: Luecken
+  last_author: Theis
+  url: https://doi.org/10.1038/s41592-021-01336-8
+
+code:
+  - role: pipeline
+    repo: https://github.com/theislab/scib-pipeline
+    # Verified 2026-09-06 with
+    #   gh api repos/theislab/scib-pipeline/commits/e97631a478e063883cee5db0dcebbf42d8268ab0
+    # -> sha matches, date 2025-01-23T11:02:27Z, message "Add links to updated projects".
+    commit: e97631a478e063883cee5db0dcebbf42d8268ab0
+    licence: MIT           # gh api repos/theislab/scib-pipeline -> spdx_id MIT; LICENSE.txt (1052 bytes) in the tree at this SHA
+    entrypoint: snakemake --configfile configs/reproduce_paper.yaml
+  - role: package
+    repo: https://github.com/theislab/scib
+    # Verified 2026-09-06 with gh api repos/theislab/scib/commits/cd679133...
+    # -> sha matches, date 2026-04-27T20:10:39Z, message "chore(main): release 1.2.1 (#434)".
+    # NOTE: this is the CURRENT scib, not the version the pipeline pins. The
+    # pipeline's paper environment pins scib 0.2.0 via a pip git+git:// URL (see
+    # environment.notes). Both are recorded on purpose: the pin is what the
+    # authors wrote, this SHA is what the package looks like today.
+    commit: cd67913396b4c0430710b3d90f1d1841f5fa4468
+    licence: MIT           # gh api repos/theislab/scib -> spdx_id MIT
+  - role: figures
+    repo: https://github.com/theislab/scib-reproducibility
+    # Verified 2026-09-06 with gh api repos/theislab/scib-reproducibility/commits/3afbffd3...
+    # -> sha matches, date 2022-12-19T10:57:05Z, message "Merge pull request #21 from rcannood/main".
+    commit: 3afbffd3674726e5146797be21cf6bd7470a2c5f
+    licence: MIT           # gh api repos/theislab/scib-reproducibility -> spdx_id MIT
+
+environment:
+  kind: docker
+  spec: Dockerfile
+  python: "3.7"            # as pinned in envs/scIB-python-paper.yml at e97631a
+  notes: >
+    Two environments are required. envs/scIB-python-paper.yml is the Python
+    environment used for the paper; envs/scIB-R-integration.yml is the R one.
+    Unit 1 scope is the Python environment only.
+
+    KNOWN BREAK, recorded before the run. The planner read
+    envs/scIB-python-paper.yml at e97631a on 2026-09-06 (GitHub contents API) and
+    confirmed the pip block verbatim contains:
+
+        - git+git://github.com/theislab/scib.git@0.2.0
+
+    GitHub disabled the unauthenticated git:// protocol in March 2022, so
+    `mamba env create -f envs/scIB-python-paper.yml` is expected to fail. The
+    obvious fix (git+https://) is NOT applied here: it would be an edit to the
+    paper's repo, which makes the untouched answer "no" by definition. It is
+    logged as the first deviation and handed to Unit 2.
+
+    SECOND, INDEPENDENT BLOCKER, also confirmed before the run. The planner read
+    configs/reproduce_paper.yaml at e97631a on the same date. Its ROOT is
+    /storage/groups/ml01/projects/2020_scIB_malte.luecken and every entry under
+    DATA_SCENARIOS points at an absolute path on the authors' HPC filer, e.g.
+    pancreas -> /storage/groups/ml01/workspace/maren.buettner/data_integration/
+    data/human_pancreas/human_pancreas_norm.h5ad. Those paths do not exist
+    outside the Theis lab, and the figshare file names are not the same strings.
+    So even if the environment built, the paper config could not be run without
+    editing it - which is also a deviation. Two independent blockers, both
+    recorded, neither fixed in Unit 1.
+
+    Note for the executor, not a licence to substitute: envs/scib-pipeline-R4.0.yml
+    at the same SHA pins scib via git+https:// (not git://) and would probably
+    resolve. It is NOT the paper environment and produces different numbers.
+    Swapping to it is a deviation and requires a human checkpoint.
+
+data:
+  - id: pancreas_h5ad
+    uri: https://doi.org/10.6084/m9.figshare.12420968
+    # figshare record 12420968, linked from the READMEs of both scib-pipeline
+    # (line 26) and scib-reproducibility (line 8), read via the GitHub contents
+    # API on 2026-09-06.
+    # figshare itself is unreachable from this network: BOTH
+    # https://api.figshare.com/v2/articles/12420968 and
+    # https://api.figshare.com/v2/articles/12420968/files returned HTTP 403, as
+    # did https://api.figshare.com/v2/articles/12420968/versions and
+    # https://figshare.com/ndownloader/articles/12420968/versions/2.
+    # What IS confirmed comes from DataCite, https://api.datacite.org/dois/
+    # 10.6084/m9.figshare.12420968 (HTTP 200 on 2026-09-06):
+    #   title    "Benchmarking atlas-level data integration in single-cell
+    #             genomics - integration task datasets"
+    #   sizes    ["20125347347 Bytes"]   <- the WHOLE record, 20.1 GB
+    #   rights   cc-by-4.0
+    #   updated  2023-10-24
+    # Per-file names and sizes are therefore NOT known. Open the record in a
+    # browser and fill the pancreas file name before running hash_data.py; the
+    # script reports a placeholder path as MISSING rather than skipping it.
+    path: data/pancreas/<fill: file name from figshare, browser required>
+    sha256: "<fill by script>"
+    size_bytes: "<fill by hand from hash_data.py output>"
+
+claims:
+  # Pre-registered 2026-09-06, before any run, per brief section 4.2.
+  # All three values were read by the planner from the actual file:
+  #   curl https://raw.githubusercontent.com/theislab/scib-reproducibility/
+  #        3afbffd3674726e5146797be21cf6bd7470a2c5f/data/metrics.csv
+  # (116,613 bytes, 466 lines = 1 header + 465 data rows, which matches the
+  # brief's "465 rows"). Row numbers below are line numbers in that file.
+  # Tolerance rationale: 0.02 absolute on NMI and ARI, both bounded in [0,1],
+  # per brief section 4.2. Chosen from the "sensible for a bounded metric"
+  # source, not from any observed spread - there is no run yet. Provisional;
+  # revisit in Unit 3 after a seed sweep, and record old value, new value and
+  # reason in git if it changes.
+  - figure: "<fill: confirm the figure/panel against the paper PDF; the planner did not open it>"
+    panel: "<fill>"
+    metric: NMI_cluster/label, pancreas, unscaled, hvg, scanorama_embed
+    value: 0.9218
+    tolerance: 0.02
+    tolerance_type: absolute
+    extraction: manual     # forward-compat with Unit 2 s7.2; transcribed from a CSV in the repo
+    source: >
+      scib-reproducibility@3afbffd data/metrics.csv line 26, row
+      /pancreas/metrics/unscaled/hvg/scanorama_embed, column NMI_cluster/label.
+      Full precision in the file: 0.9218217813754972.
+  - figure: "<fill>"
+    panel: "<fill>"
+    metric: ARI_cluster/label, pancreas, unscaled, hvg, scanorama_embed
+    value: 0.9540
+    tolerance: 0.02
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      scib-reproducibility@3afbffd data/metrics.csv line 26, same row,
+      column ARI_cluster/label. Full precision in the file: 0.954017004862837.
+  - figure: "<fill>"
+    panel: "<fill>"
+    metric: graph_conn, pancreas, unscaled, hvg
+    value: [scvi_embed, scanorama_embed, harmony_embed]
+    tolerance: 0
+    tolerance_type: rank-order
+    extraction: manual
+    source: >
+      scib-reproducibility@3afbffd data/metrics.csv, column graph_conn, all
+      three rows within unscaled/hvg so the numbers are computed on the same
+      input: /pancreas/metrics/unscaled/hvg/scvi_embed = 0.990548145030244
+      (line 230), .../scanorama_embed = 0.9813724345867806 (line 26),
+      .../harmony_embed = 0.9756839996922988 (line 182). Rounded: 0.9905,
+      0.9814, 0.9757 - which reproduces the three values the brief quotes.
+      tolerance 0 means the ordering must be exactly preserved.
+
+# Forward-compat with Unit 2 section 7.2. max_download_gb is the brief's
+# section 9.1 threshold. The figshare record is 20.1 GB in total, so this
+# checkpoint WILL fire; the executor must stop and ask before downloading.
+checkpoints:
+  max_download_gb: 5
+  max_stage_minutes: 720
+
+# Forward-compat with Unit 2 section 7.2. Empty on purpose: the run is expected
+# to fail and the failure is to be recorded, not worked around. An entry here
+# needs what / why / approved_by / date, and Unit 2 refuses to start a run with
+# an unapproved entry.
+deviations: []
+
+# Forward-compat with Unit 2 section 7.2. Not reachable in Unit 1 (the build is
+# expected to fail first); named now so the shape is fixed.
+stages:
+  - id: reproduce_paper
+    cmd: ["snakemake", "--configfile", "configs/reproduce_paper.yaml", "-j", "1"]
+    expected_minutes: "<fill: unknown; no successful run>"
+results:
+  file: "<fill: the pipeline writes merged metrics CSVs under ROOT; path not confirmed without a run>"
+
+selection:
+  C1: {score: 2, justification: "figshare record 12420968 linked from both READMEs (GitHub contents API); DOI 10.6084/m9.figshare.12420968 resolves at https://api.datacite.org/dois/10.6084/m9.figshare.12420968 with licence cc-by-4.0 and no data-use agreement"}
+  C2: {score: 2, justification: "gh api on all three repos returns spdx_id MIT; scib-pipeline additionally has LICENSE.txt in the tree at e97631a"}
+  C3: {score: 1, justification: "envs/scIB-python-paper.yml pins python=3.7, numpy=1.18.1, scanpy=1.4.6, anndata=0.7.1, bbknn=1.3.9, louvain=0.6.1, numba<=0.46, scvi=0.6.7, scanorama=1.7.0 but leaves pandas, seaborn, scipy, scikit-learn and r-base unpinned, and the pip block uses a dead git:// protocol"}
+  C4: {score: 2, justification: "data/metrics.csv at 3afbffd is 116,613 bytes with 465 data rows of per-method per-dataset metric values, fetched and read this session"}
+  C5: {score: 2, justification: "Nature Methods 19, 41-50 (2022); DOI 10.1038/s41592-021-01336-8"}
+  C6: {score: 1, justification: "gh api repos/theislab/scib/issues/325/comments shows five COLLABORATOR replies (LuckyMD, mumichae) but all in July 2022; issue 435, opened 2026-04-28 by mumichae, has one comment dated 2026-08-05 from AlbertoFabbri93 with author_association NONE - no maintainer reply"}
+  C7: {score: 1, justification: "configs/reproduce_paper.yaml marks seurat, seuratrpca, harmony, conos, liger and fastmnn as R:true, run through rpy2 3.1.0; scoping to the Python-only methods is a deliberate narrowing"}
+  C8: {score: 1, justification: "DataCite reports the whole figshare record as 20,125,347,347 bytes (20.1 GB), above the 5 GB checkpoint and at the ceiling of the ~20 GB C8 limit; the pancreas task alone is the tractable slice"}
+  total: 12
+
+notes: >
+  GATE: PASSES. Total 12, no zero in C1-C4.
+
+  Expected untouched outcome: NO. Predicted first error, recorded before the run:
+  `mamba env create -f envs/scIB-python-paper.yml` fails. The brief predicts the
+  pip stage, on the clone of git+git://github.com/theislab/scib.git@0.2.0, and
+  that pin is confirmed verbatim in the file. A conda solver failure is the other
+  plausible first error, because the same file asks for python=3.7 together with
+  numba<=0.46, scvi=0.6.7 and r-seurat=3.1.1 on today's conda-forge. Whichever
+  fires first, the command is the same and the recorded first_error must be
+  whatever the run actually printed, not this prediction. If the environment does
+  build, the run still cannot proceed untouched, because
+  configs/reproduce_paper.yaml points at absolute Theis-lab HPC paths.
+
+  The figshare record is 20.1 GB in total and the per-file breakdown is not
+  obtainable from this network (403 on every figshare endpoint tried). The
+  executor must stop at the max_download_gb checkpoint and ask before fetching
+  anything, and must not guess a file name: hash_data.py deliberately reports a
+  placeholder path as MISSING.
+
+  The pipeline README states the repo "is not being developed" and points to the
+  OpenProblems living benchmark. That is good for this purpose: it is a snapshot,
+  not a moving target.

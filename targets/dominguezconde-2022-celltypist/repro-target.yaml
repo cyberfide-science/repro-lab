@@ -1,0 +1,198 @@
+# DRAFT manifest - Unit 1. Written by the planner on 2026-09-06.
+# STATUS: candidate. Attempted only after the two selected targets are done.
+# It is in the set because it is the only candidate scored here that pairs a
+# real deposited data accession with a live maintainer, and because its failure
+# mode - a mutable, unversioned model registry - is one the other manifests do
+# not exercise.
+# Every value below was read from a source opened on 2026-09-06.
+
+schema_version: 1
+slug: dominguezconde-2022-celltypist
+status: candidate
+
+paper:
+  title: Cross-tissue immune cell analysis reveals tissue-specific features in humans
+  doi: 10.1126/science.abl5197
+  journal: Science
+  year: 2022
+  first_author: Dominguez Conde
+  last_author: Teichmann
+  url: https://doi.org/10.1126/science.abl5197
+  # Europe PMC gives firstPublicationDate 2022-05-13, Science 376(6594):eabl5197,
+  # PMC7612735, CC BY 4.0.
+
+code:
+  - role: package
+    repo: https://github.com/Teichlab/celltypist
+    # Verified 2026-09-06 with
+    #   gh api repos/Teichlab/celltypist/commits/fe357564a6625d3b1732a022fd39f18e55696e80
+    # -> sha matches, date 2025-06-25T21:09:27Z, message "Version 1.7.1".
+    # This is also the commit behind release 1.7.1. The code has not moved since.
+    commit: fe357564a6625d3b1732a022fd39f18e55696e80
+    licence: MIT           # gh api repos/Teichlab/celltypist -> spdx_id MIT; LICENSE (1056 bytes) in the tree at this SHA
+    entrypoint: celltypist --indata data/celltypist/demo_2000_cells.h5ad --model Immune_All_Low.pkl --outdir out/
+
+environment:
+  kind: docker
+  spec: Dockerfile
+  python: "3.9"            # the repo's own Dockerfile at fe357564 is FROM python:3.9-slim
+  notes: >
+    The repo DOES ship a Dockerfile (579 bytes at fe357564, confirmed via the
+    GitHub trees API), but it pins nothing. Read verbatim, it is
+    FROM python:3.9-slim, then `pip install celltypist` with no version, then
+    `celltypist --update-models`. requirements.txt (126 bytes) is eight open
+    lower bounds: numpy>=1.19.0, pandas>=1.0.5, scikit-learn>=0.24.1,
+    openpyxl>=3.0.4, click>=7.1.2, requests>=2.23.0, scanpy>=1.7.0,
+    leidenalg>=0.9.0. setup.py reads that file into install_requires with
+    python_requires='>=3.6'.
+
+    THE REPRODUCIBILITY HOLE, identified before the run. `celltypist
+    --update-models` fetches https://celltypist.cog.sanger.ac.uk/models/models.json,
+    which the planner fetched on 2026-09-06: HTTP 200, content-length 25568,
+    last-modified Mon, 16 Mar 2026 16:08:46 GMT - nine months AFTER the code
+    froze on 2025-06-25. That index is mutable and unversioned, and nothing in
+    celltypist/models.py checks a checksum. Two builds of the shipped Dockerfile
+    a month apart are not the same environment.
+
+    HOW THIS MANIFEST HANDLES IT, and why that is not a deviation. The model is
+    fetched by its own versioned URL and hashed like any other data file (see
+    data[] below), instead of via --update-models. That is a change to OUR fetch
+    step, not to the paper's code: no file under the clone is touched, and the
+    bytes handed to celltypist are the same bytes --update-models would hand it
+    on a day when the registry still points at v2. It is recorded here so a
+    reviewer can see the choice rather than infer it. If the executor finds that
+    celltypist refuses to load a model from an explicit path without the
+    registry, that is a finding: stop, record it, do not patch models.py.
+
+    There is no test suite and no CI: gh api repos/Teichlab/celltypist/contents/.github
+    returns 404, and the tree at fe357564 has no tests/ directory. So nothing in
+    the repo will tell you the environment drifted - which is exactly what open
+    issue 164 ("Incompatibility scikit-learn 1.8?") is about.
+
+data:
+  # All three URLs were HEAD-checked by the planner on 2026-09-06 with
+  # curl -sIL; status, content-length and last-modified are recorded below.
+  - id: demo_cells
+    uri: https://celltypist.cog.sanger.ac.uk/Notebook_demo_data/demo_2000_cells.h5ad
+    # HTTP 200, content-length 35730948, last-modified Sun, 31 Oct 2021 20:51:59 GMT.
+    # This is the input used by the tutorial notebook whose committed outputs are
+    # the claim source below.
+    path: data/celltypist/demo_2000_cells.h5ad
+    sha256: "<fill by script>"
+    size_bytes: 35730948
+  - id: model_immune_all_low_v2
+    uri: https://celltypist.cog.sanger.ac.uk/models/Pan_Immune_CellTypist/v2/Immune_All_Low.pkl
+    # HTTP 200, content-length 2824990, last-modified Sat, 16 Jul 2022 21:06:41 GMT.
+    # The version is in the URL path (v2), which is why this URL is used instead
+    # of the mutable models.json indirection. The last-modified date matches the
+    # "date: 2022-07-16 00:20:42" the model prints in the tutorial notebook.
+    path: data/celltypist/Immune_All_Low.pkl
+    sha256: "<fill by script>"
+    size_bytes: 2824990
+
+claims:
+  # Pre-registered 2026-09-06, BEFORE any run.
+  # Source for all four: committed outputs in
+  #   https://raw.githubusercontent.com/Teichlab/celltypist/fe357564a6625d3b1732a022fd39f18e55696e80/docs/notebook/celltypist_tutorial.ipynb
+  # (376,236 bytes). The planner parsed the notebook JSON and read the stored
+  # stdout of the named cells first-hand.
+  # Tolerance rationale: all four are exact integers that a deterministic code
+  # path produces - a model's own shape, and the size of a set intersection.
+  # tolerance 0 absolute is therefore the honest choice, not a strict one. The
+  # tutorial's over-clustering and majority-voting outputs were deliberately NOT
+  # used as claims: they run Leiden, which is seed-dependent, so a cluster id is
+  # not a reproducible number.
+  - id: T1
+    figure: "n/a - committed notebook output, not a paper figure"
+    panel: null
+    metric: n_cell_types in model Immune_All_Low.pkl v2
+    value: 98
+    tolerance: 0
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      celltypist_tutorial.ipynb at fe357564, code cell 24 stored output:
+      "CellTypist model with 98 cell types and 6639 features / date: 2022-07-16
+      00:20:42.927778 / version: v2 / source: https://doi.org/10.1126/science.abl5197".
+  - id: T2
+    figure: "n/a - committed notebook output"
+    panel: null
+    metric: n_features in model Immune_All_Low.pkl v2
+    value: 6639
+    tolerance: 0
+    tolerance_type: absolute
+    extraction: manual
+    source: celltypist_tutorial.ipynb at fe357564, code cell 24 stored output (same line as T1).
+  - id: T3
+    figure: "n/a - committed notebook output"
+    panel: null
+    metric: n_features used for prediction on demo_2000_cells.h5ad with Immune_All_Low.pkl
+    value: 5645
+    tolerance: 0
+    tolerance_type: absolute
+    extraction: manual
+    source: >
+      celltypist_tutorial.ipynb at fe357564, code cell 28 stored output:
+      "Input data has 2000 cells and 18950 genes / Matching reference genes in
+      the model / 5645 features used for prediction". This is the size of the
+      intersection between the model's 6639 features and the demo file's 18950
+      genes - a deterministic function of the two pinned artefacts, and the
+      single most useful claim here because it fails loudly if either the model
+      or the demo file silently changes.
+  - id: T4
+    figure: "n/a - committed notebook output"
+    panel: null
+    metric: n_genes in demo_2000_cells.h5ad after the tutorial's preprocessing
+    value: 18950
+    tolerance: 0
+    tolerance_type: absolute
+    extraction: manual
+    source: celltypist_tutorial.ipynb at fe357564, code cells 9 and 28 stored outputs ("(2000, 18950)").
+
+checkpoints:
+  max_download_gb: 5     # total fetch here is 38,555,938 bytes; this will not fire
+  max_stage_minutes: 60
+
+deviations: []
+
+stages:
+  - id: annotate
+    cmd: ["celltypist", "--indata", "data/celltypist/demo_2000_cells.h5ad",
+          "--model", "data/celltypist/Immune_All_Low.pkl", "--outdir", "out/"]
+    expected_minutes: 10
+results:
+  file: "out/<fill: celltypist writes predicted_labels.csv and friends into --outdir; confirm the exact names from the first run>"
+
+selection:
+  C1: {score: 2, justification: "ArrayExpress E-MTAB-11536 plus Zenodo DOI 10.5281/zenodo.6334988, both named in the Data availability section of https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7612735/fullTextXML; E-MTAB-11536 confirmed public with ReleaseDate 2022-04-13 via the EBI BioStudies API, no login and no data-use agreement"}
+  C2: {score: 2, justification: "gh api repos/Teichlab/celltypist -> spdx_id MIT; LICENSE (1056 bytes) in the tree at fe357564"}
+  C3: {score: 1, justification: "a Dockerfile exists at fe357564 (579 bytes) but pins nothing - unversioned `pip install celltypist` plus `celltypist --update-models` against https://celltypist.cog.sanger.ac.uk/models/models.json, whose last-modified is 2026-03-16, nine months after the code froze; requirements.txt is eight open lower bounds"}
+  C4: {score: 1, justification: "no tests/ and no metrics CSV anywhere in the 56-entry tree at fe357564; the only committed numbers are stored notebook outputs in docs/notebook/celltypist_tutorial.ipynb (98 cell types, 6639 features, 5645 features used, 2000x18950), which are checkable but are not a metrics table; the PMC supplementary archive for PMC7612735 is one 23.9 MB PDF with no data tables, and science.org returned HTTP 403 so the publisher-hosted Data S tables could not be opened"}
+  C5: {score: 2, justification: "Science 376(6594):eabl5197, 2022; Europe PMC firstPublicationDate 2022-05-13"}
+  C6: {score: 2, justification: "gh api repos/Teichlab/celltypist/issues/comments shows ChuanXu1 (COLLABORATOR) replying on 2026-08-02 (issues 132, 164, 169), 2026-05-29 and 2026-05-19 (164), 2026-05-06 (166) and 2026-04-24 (159, 168) - a single maintainer, but consistently inside the last year"}
+  C7: {score: 2, justification: "requirements.txt and setup.py at fe357564 list numpy, pandas, scikit-learn, openpyxl, click, requests, scanpy, leidenalg - pure Python, no R"}
+  C8: {score: 2, justification: "the minimal run is a 35,730,948-byte demo h5ad plus a 2,824,990-byte model (both content-length verified); logistic-regression annotation of 2000 cells on CPU in minutes. Even the full paper atlas tops out at global.h5ad, reported by the agent survey at 5.1 GB, under the 20 GB ceiling"}
+  total: 14
+
+notes: >
+  GATE: PASSES. Total 14, no zero in C1-C4.
+
+  Expected untouched outcome: UNCERTAIN, and that is the honest answer rather
+  than a hedge. The annotation itself should run - the input and the model are
+  both fetchable by stable URL and hash-verifiable, and the code path is
+  scikit-learn logistic regression on 2000 cells. What cannot be predicted is
+  whether an unpinned `pip install celltypist` resolves against a scikit-learn
+  that can still unpickle a model serialised in July 2022. Open issue 164,
+  "Incompatibility scikit-learn 1.8?", is exactly that question and is still
+  open as of 2026-08-12. If unpickling fails, that IS the result: record it,
+  record the resolved scikit-learn version in env-resolved.txt, and do not pin
+  scikit-learn backwards to make it pass. Pinning a dependency the project does
+  not pin, in order to turn a red run green, is the deviation this whole unit
+  exists to catch.
+
+  Why this is a candidate and not selected: C4 is 1. The claims above are real
+  and checkable, but they are model and data shapes, not the paper's scientific
+  results, and a reviewer is right to say so. Promoting this target properly
+  means first getting the Science supplementary Data S tables, which needs a
+  browser - science.org returned 403 to every scripted fetch tried on
+  2026-09-06.
