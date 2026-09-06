@@ -173,7 +173,7 @@ deviations:
       2025-06-25) and is checksum-free in celltypist/models.py. Fetching the
       versioned URL directly makes the model bytes pinnable and hashable. No file
       under the clone is touched; only our fetch step changes.
-    approved_by: "maintainer (recorded post-run; neither change touches the paper's code)"
+    approved_by: "Michael Wolfe, repro-lab maintainer (not the celltypist authors; approved 2026-09-06 before the harness run; neither change touches the paper's code)"
     date: 2026-09-06
   - what: >
       celltypist is installed from the clone at the pinned commit
@@ -186,7 +186,7 @@ deviations:
       the pinned SHA keeps the code under test identical to the code cited in
       claims[].source. Dependency versions remain unpinned, as the project leaves
       them.
-    approved_by: "maintainer (recorded post-run; neither change touches the paper's code)"
+    approved_by: "Michael Wolfe, repro-lab maintainer (not the celltypist authors; approved 2026-09-06 before the harness run; neither change touches the paper's code)"
     date: 2026-09-06
 
 stages:
@@ -203,6 +203,12 @@ results:
   # celltypist's public API for T1 and T2 and parses annotate.log for the two
   # numbers the stage itself printed (T3, T4), and writes them to results.csv.
   # No value is retyped. The three CSVs are kept as run artefacts.
+  # Also named here for completeness: run.sh line 11 is a repro-lab-owned,
+  # read-only model-shape probe that prints "model cell_types 98 | model
+  # features 6639" to the container log - it touches no file under the clone
+  # and is not part of the paper's method. It exists because T1 and T2 are
+  # properties of the pinned model file itself, whereas T3 and T4 come from
+  # the annotate stage's own stdout.
   file: "out/results.csv"        # key,value CSV: the four metrics named in claims[]
 
 # Added before the report run. Everything the report harness needs on the HOST
@@ -245,6 +251,10 @@ selection:
 
 notes: >
   GATE: PASSES. Total 14, no zero in C1-C4.
+
+  SCOPE OF THE CLAIMS. T1-T4 are model and data shapes, not the paper's
+  scientific results, so any verdict a report reaches is scoped to those four
+  shape claims and says nothing about whether the paper's findings reproduce.
 
   C1 scope, stated plainly. The C1=2 above is earned by the PAPER's deposited
   data - ArrayExpress E-MTAB-11536 and Zenodo 10.5281/zenodo.6334988. This
