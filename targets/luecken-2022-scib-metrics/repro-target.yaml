@@ -65,11 +65,18 @@ data:
   # sc.datasets.pbmc3k_processed() and sc.datasets.pbmc68k_reduced(). The first
   # two download at test time; the third is bundled in the scanpy wheel.
   # URLs and the upstream sha256 values were read on 2026-09-06 from
-  #   https://raw.githubusercontent.com/scverse/scanpy/main/src/scanpy/datasets/registry.yaml
-  # (1930 bytes). CAVEAT, recorded rather than glossed: that registry was read
-  # from the MOVING main branch of scverse/scanpy, not a pinned SHA, because it
-  # is scanpy's file and not this target's. If the executor finds different
-  # bytes, that is a finding about scanpy's hosting, not about scib.
+  #   https://raw.githubusercontent.com/scverse/scanpy/ec374022343eb7ef80bbe3139264e37552cb79b4/src/scanpy/datasets/registry.yaml
+  # (1930 bytes). The reference is PINNED: ec374022343eb7ef80bbe3139264e37552cb79b4
+  # was scverse/scanpy's main-branch head on 2026-09-06, resolved that day with
+  # `gh api repos/scverse/scanpy/commits/main --jq .sha`. It is pinned because the
+  # earlier draft cited the moving main branch, which is not a reproducible
+  # reference. If the executor finds different bytes at this SHA, that is a
+  # finding about scanpy's hosting, not about scib.
+  # NOTE on coverage: registry.yaml at this SHA lists five entries only -
+  # burczynski06, moignard15, paul15, pbmc3k, pbmc3k_processed. It does NOT list
+  # 10x_pbmc68k_reduced, which is bundled in the scanpy wheel rather than
+  # downloaded. So a published sha256 backs the two DOWNLOADED fixtures below;
+  # the zarr's integrity rests on the hash of the scanpy wheel that carries it.
   # Sizes below are content-length values the planner measured with curl -sIL.
   - id: pbmc3k_processed
     uri: https://exampledata.scverse.org/scanpy/pbmc3k.h5ad
@@ -92,9 +99,16 @@ data:
     sha256: "<fill by script>"
     size_bytes: 10297693
   - id: pbmc68k_reduced
-    uri: https://github.com/scverse/scanpy/raw/main/src/scanpy/datasets/10x_pbmc68k_reduced.zarr.zip
+    uri: https://raw.githubusercontent.com/scverse/scanpy/ec374022343eb7ef80bbe3139264e37552cb79b4/src/scanpy/datasets/10x_pbmc68k_reduced.zarr.zip
+    # PINNED to scverse/scanpy commit ec374022343eb7ef80bbe3139264e37552cb79b4,
+    # resolved on 2026-09-06 with `gh api repos/scverse/scanpy/commits/main --jq .sha`
+    # (previously this pointed at the moving main branch). Existence and size at
+    # that SHA confirmed the same day with
+    #   gh api "repos/scverse/scanpy/contents/src/scanpy/datasets/10x_pbmc68k_reduced.zarr.zip?ref=ec374022343eb7ef80bbe3139264e37552cb79b4" --jq .size
+    # -> 1733874, matching size_bytes below.
     # Bundled inside the scanpy wheel, so the run does not fetch it; listed here
-    # for provenance. Size 1733874 bytes, reported by the GitHub contents API.
+    # for provenance. It is NOT in scanpy's datasets/registry.yaml, so there is no
+    # published upstream sha256 for it; its integrity rests on the scanpy wheel's hash.
     path: data/scib-metrics/10x_pbmc68k_reduced.zarr.zip
     sha256: "<fill by script>"
     size_bytes: 1733874
@@ -173,7 +187,7 @@ results:
   file: "out/pytest.xml"
 
 selection:
-  C1: {score: 2, justification: "the three fixtures resolve to https://exampledata.scverse.org/scanpy/pbmc3k.h5ad and .../paul15.h5 plus a wheel-bundled zarr, all public with no login and each carrying a published sha256 in https://raw.githubusercontent.com/scverse/scanpy/main/src/scanpy/datasets/registry.yaml; scored 2 for stability and openness, though these are scanpy example datasets rather than a DOI'd deposit for this paper"}
+  C1: {score: 2, justification: "the three fixtures resolve to https://exampledata.scverse.org/scanpy/pbmc3k.h5ad and .../paul15.h5 plus a wheel-bundled zarr, all public with no login; the two downloaded fixtures (pbmc3k_processed, paul15) each carry a published sha256 in https://raw.githubusercontent.com/scverse/scanpy/ec374022343eb7ef80bbe3139264e37552cb79b4/src/scanpy/datasets/registry.yaml (SHA pinned 2026-09-06), while 10x_pbmc68k_reduced is NOT listed in that registry - it ships inside the scanpy wheel, so its integrity rests on the wheel's hash rather than a per-file published digest; scored 2 for stability and openness, though these are scanpy example datasets rather than a DOI'd deposit for this paper"}
   C2: {score: 2, justification: "gh api repos/theislab/scib -> spdx_id MIT; LICENSE.txt (1052 bytes) in the tree at cd67913"}
   C3: {score: 1, justification: "pyproject.toml at cd67913 declares lower bounds only (pandas>=2, scanpy>=1.5, anndata>=0.7.2, igraph>=0.10, requires-python >=3.11) with no lock file and no Dockerfile in the tree"}
   C4: {score: 2, justification: "four expected metric values are hard-coded in the repo at cd67913 - tests/metrics/test_cluster_metrics.py lines 23 and 29, tests/metrics/test_clisi.py lines 16, 30 and 43 - with the comparison defined in tests/common.py as abs(x-y) <= diff"}

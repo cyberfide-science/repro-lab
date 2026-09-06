@@ -153,7 +153,38 @@ checkpoints:
   max_download_gb: 5     # total fetch here is 38,555,938 bytes; this will not fire
   max_stage_minutes: 60
 
-deviations: []
+deviations:
+  # Both entries record changes relative to the procedure the repo itself states
+  # (its Dockerfile at fe357564). Brief section 9.1 checkpoint 2 counts a skipped
+  # step as a deviation, so they are logged here rather than only in
+  # environment.notes above.
+  - what: >
+      `celltypist --update-models` is skipped. The model is fetched instead by an
+      explicit versioned URL,
+      https://celltypist.cog.sanger.ac.uk/models/Pan_Immune_CellTypist/v2/Immune_All_Low.pkl,
+      and hashed like any other input (data[].model_immune_all_low_v2).
+    why: >
+      --update-models resolves through
+      https://celltypist.cog.sanger.ac.uk/models/models.json, which is mutable and
+      unversioned (last-modified 2026-03-16, nine months after the code froze on
+      2025-06-25) and is checksum-free in celltypist/models.py. Fetching the
+      versioned URL directly makes the model bytes pinnable and hashable. No file
+      under the clone is touched; only our fetch step changes.
+    approved_by: "orchestrator (recorded post-run; neither change touches the paper's code; user informed)"
+    date: 2026-09-06
+  - what: >
+      celltypist is installed from the clone at the pinned commit
+      fe357564a6625d3b1732a022fd39f18e55696e80, rather than by the repo
+      Dockerfile's unversioned `pip install celltypist`.
+    why: >
+      The repo's Dockerfile (579 bytes at fe357564) pins nothing, so `pip install
+      celltypist` would resolve to whatever version PyPI serves on the build day -
+      not necessarily the code this manifest's claims were read from. Installing
+      the pinned SHA keeps the code under test identical to the code cited in
+      claims[].source. Dependency versions remain unpinned, as the project leaves
+      them.
+    approved_by: "orchestrator (recorded post-run; neither change touches the paper's code; user informed)"
+    date: 2026-09-06
 
 stages:
   - id: annotate
@@ -161,7 +192,11 @@ stages:
           "--model", "data/celltypist/Immune_All_Low.pkl", "--outdir", "out/"]
     expected_minutes: 10
 results:
-  file: "out/<fill: celltypist writes predicted_labels.csv and friends into --outdir; confirm the exact names from the first run>"
+  # The run wrote three CSVs into --outdir: predicted_labels.csv (47,433 B),
+  # probability_matrix.csv (4,369,666 B) and decision_matrix.csv (3,813,844 B).
+  # predicted_labels.csv is the one the claims are checked against; the other two
+  # are kept as run artefacts.
+  file: "out/predicted_labels.csv"
 
 selection:
   C1: {score: 2, justification: "ArrayExpress E-MTAB-11536 plus Zenodo DOI 10.5281/zenodo.6334988, both named in the Data availability section of https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7612735/fullTextXML; E-MTAB-11536 confirmed public with ReleaseDate 2022-04-13 via the EBI BioStudies API, no login and no data-use agreement"}
@@ -176,6 +211,14 @@ selection:
 
 notes: >
   GATE: PASSES. Total 14, no zero in C1-C4.
+
+  C1 scope, stated plainly. The C1=2 above is earned by the PAPER's deposited
+  data - ArrayExpress E-MTAB-11536 and Zenodo 10.5281/zenodo.6334988. This
+  reproduction does not use either. Its two inputs are Sanger object-store URLs
+  (demo_2000_cells.h5ad and the v2 Immune_All_Low.pkl), which carry no DOI and no
+  accession; they are stable and hashable, but they are not a citable deposit.
+  Anyone reading C1 as a statement about the bytes this run consumed would be
+  reading it wrong.
 
   Expected untouched outcome: UNCERTAIN, and that is the honest answer rather
   than a hedge. The annotation itself should run - the input and the model are

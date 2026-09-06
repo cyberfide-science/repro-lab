@@ -1,6 +1,7 @@
 == clone HEAD: fe357564a6625d3b1732a022fd39f18e55696e80
 == python: Python 3.9.25
 scikit-learn 1.6.1 | scanpy 1.10.3 | numpy 2.0.2 | pandas 2.3.3
+model cell_types 98 | model features 6639
 
                     oooo  oooo      .                           o8o               .
                      888   888    .o8                           `"'             .o8
@@ -35,7 +36,7 @@ d88'  "Y8 d88   88b  888   888    888     88.  .8    888   88b  888  d88(  "8   
 ✅ Prediction done!
 == files written to /work/out:
 total 8044
--rw-r--r-- 1 root root 3813844 Sep  6 20:20 decision_matrix.csv
--rw-r--r-- 1 root root   47433 Sep  6 20:20 predicted_labels.csv
--rw-r--r-- 1 root root 4369666 Sep  6 20:20 probability_matrix.csv
+-rw-r--r-- 1 root root 3813844 Sep  6 20:47 decision_matrix.csv
+-rw-r--r-- 1 root root   47433 Sep  6 20:47 predicted_labels.csv
+-rw-r--r-- 1 root root 4369666 Sep  6 20:47 probability_matrix.csv
 == git status --porcelain inside the clone after the run (empty means untouched):

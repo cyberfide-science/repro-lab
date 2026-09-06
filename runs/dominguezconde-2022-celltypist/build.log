@@ -734,3 +734,52 @@
 #11 writing image sha256:97b24331a9b19af64947b0eb0b801f77806a314f1c0df336b4feeae917231038 done
 #11 naming to docker.io/repro-lab/dominguezconde-2022-celltypist done
 #11 DONE 2.9s
+
+
+==== Rebuild 2026-09-06 20:46 UTC after review round 1 (run.sh gained the model probe; all layers before COPY run.sh served from cache) ====
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.42kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python@sha256:2d97f6910b16bd338d3060f261f53f144965f755599aab1acda1e13cf1731b1b
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/6] FROM docker.io/library/python@sha256:2d97f6910b16bd338d3060f261f53f144965f755599aab1acda1e13cf1731b1b
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 1.16kB done
+#5 DONE 0.0s
+
+#6 [2/6] RUN apt-get update  && apt-get install -y --no-install-recommends git build-essential  && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [3/6] WORKDIR /work
+#7 CACHED
+
+#8 [4/6] RUN git clone https://github.com/Teichlab/celltypist.git  && cd celltypist && git checkout fe357564a6625d3b1732a022fd39f18e55696e80
+#8 CACHED
+
+#9 [5/6] RUN pip install "/work/celltypist"  && pip freeze > /work/env-resolved.txt  && python -c "import numpy; numpy.show_config()" > /work/numpy-show-config.txt 2>&1
+#9 CACHED
+
+#10 [6/6] COPY run.sh /work/run.sh
+#10 DONE 0.0s
+
+#11 exporting to image
+#11 exporting layers 0.0s done
+#11 writing image sha256:85318092ccee03d898a49529718679ea51c60e0f6385b9981fa7207cc0772526
+#11 writing image sha256:85318092ccee03d898a49529718679ea51c60e0f6385b9981fa7207cc0772526 0.2s done
+#11 naming to docker.io/repro-lab/dominguezconde-2022-celltypist
+#11 naming to docker.io/repro-lab/dominguezconde-2022-celltypist done
+#11 DONE 0.2s
+
+real	0m1.933s
+user	0m0.045s
+sys	0m0.091s
