@@ -115,33 +115,6 @@ claims:
     tolerance_type: absolute
     extraction: manual
     source: "PMC11302616 Figure 3 caption, '36.8% in the top 10 ranks'"
-  - id: RS4
-    figure: "Figure 3 (medRxiv v3, PMC11302616)"
-    panel: "Top-1, o1 preview — substituted grounding (OAK exact match, then a Claude Opus 5.5 mapping table in place of CurateGPT)"
-    metric: fraction of 5213 cases with the correct diagnosis at rank 1, o1-preview, malco scoring rule
-    value: 0.236
-    tolerance: 0.0005
-    tolerance_type: absolute
-    extraction: manual
-    source: "as RS1"
-  - id: RS5
-    figure: "Figure 3 (medRxiv v3, PMC11302616)"
-    panel: "Top-3, o1 preview — substituted grounding (OAK exact match, then a Claude Opus 5.5 mapping table in place of CurateGPT)"
-    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-3, o1-preview
-    value: 0.312
-    tolerance: 0.0005
-    tolerance_type: absolute
-    extraction: manual
-    source: "as RS2"
-  - id: RS6
-    figure: "Figure 3 (medRxiv v3, PMC11302616)"
-    panel: "Top-10, o1 preview — substituted grounding (OAK exact match, then a Claude Opus 5.5 mapping table in place of CurateGPT)"
-    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-10, o1-preview
-    value: 0.368
-    tolerance: 0.0005
-    tolerance_type: absolute
-    extraction: manual
-    source: "as RS3"
 
 checkpoints:
   max_download_gb: 5
@@ -168,9 +141,6 @@ harness:
     RS1: RS1_o1_top1_frac_floor
     RS2: RS2_o1_top3_frac_floor
     RS3: RS3_o1_top10_frac_floor
-    RS4: RS4_o1_top1_frac_subst
-    RS5: RS5_o1_top3_frac_subst
-    RS6: RS6_o1_top10_frac_subst
   stages:
     - id: container_run
       cmd: ["docker", "run", "--rm", "--network", "none",
@@ -211,3 +181,9 @@ notes: >
 
   Denominator: 5213, the line count of correct_results.tsv and the figure caption's "cohort of 5213
   cases"; 5212 response lines are scored (PMID_17886299_patient_BM5 appears twice in the gold file).
+
+  Amendment 2026-09-27, before any scored run: the Opus 5.5 mapping table failed its pre-registered
+  gate (agreement with OAK on OAK-resolved names 0.2628 < 0.90; grounding/opus-mondo-map.meta.json),
+  so, as pre-registered, the claims that depend on it are removed: RS4, RS5 and RS6. The table stays committed as
+  the record. The container still writes the substituted-grounding keys to results.csv; they are
+  evidence only and back no claim. The deviation entries describing the table are kept unchanged.

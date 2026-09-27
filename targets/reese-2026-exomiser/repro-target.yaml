@@ -151,15 +151,6 @@ claims:
     tolerance_type: absolute
     extraction: manual
     source: "PMC11302616 Figure 3 caption, '58.5% of cases'"
-  - id: EX4
-    figure: "Abstract and Figure 3"
-    panel: "Exomiser vs o1 preview under substituted grounding, all cases"
-    metric: Exomiser top-1 count exceeds o1-preview top-1 count on the same cases (o1-preview grounded by OAK then the Claude Opus 5.5 table)
-    value: "true"
-    tolerance: null
-    tolerance_type: same_conclusion
-    extraction: manual
-    source: "EJHG abstract: 'The best LLM ranked the correct diagnosis first in 23.6% of cases, whereas Exomiser did so in 35.5% of cases.'"
 
 checkpoints:
   max_download_gb: 5
@@ -182,7 +173,6 @@ harness:
     EX1: EX1_exomiser_top1_frac
     EX2: EX2_exomiser_top3_frac
     EX3: EX3_exomiser_top10_frac
-    EX4: EX4_exomiser_top1_gt_o1_subst_top1
   stages:
     - id: container_run
       # work/reese-2026-exomiser is mounted whole at /work/exo: the container writes raw/ (audit JSON,
@@ -222,3 +212,9 @@ notes: >
 
   The Opus mapping table's gate (agreement with OAK >= 0.90 on OAK-resolved names) was fixed before its
   first call; EX4 uses the table only if the gate passed.
+
+  Amendment 2026-09-27, before any scored run: the Opus 5.5 mapping table failed its pre-registered
+  gate (agreement with OAK on OAK-resolved names 0.2628 < 0.90; grounding/opus-mondo-map.meta.json),
+  so, as pre-registered, the claims that depend on it are removed: EX4. The table stays committed as
+  the record. The container still writes the substituted-grounding keys to results.csv; they are
+  evidence only and back no claim. The deviation entries describing the table are kept unchanged.
