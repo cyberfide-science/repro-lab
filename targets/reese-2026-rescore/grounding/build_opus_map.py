@@ -281,7 +281,7 @@ def cmd_validate(a):
             label = mondo.label(mid)
             meta = mondo.entity_metadata_map(mid) if label is not None else {}
             deprecated = any(str(v).lower() == "true" for v in meta.get("owl:deprecated", []))
-            aliases = {s.strip().casefold() for s in (mondo.entity_aliases(mid) or []) + [label or ""] if s}
+            aliases = {s.strip().casefold() for s in list(mondo.entity_aliases(mid) or []) + [label or ""] if s}
             valid = label is not None and not deprecated and mlabel.strip().casefold() in aliases
         eff = mid if valid else "no match"
         oak = perform_oak_grounding(mondo, r["name"], exact_match=True, verbose=False, include_list=["MONDO:"])
@@ -310,7 +310,7 @@ def cmd_validate(a):
              {"value": None, "reason": "the CLI's JSON output did not report usage for every attempt"})
     import sqlite3
     ver_iri = [row[0] for row in sqlite3.connect(mondo.engine.url.database).execute(
-        "SELECT value FROM statements WHERE predicate = 'owl:versionIRI'")]
+        "SELECT object FROM statements WHERE predicate = 'owl:versionIRI'")]
     meta = {
         "model_requested": MODEL,
         "model_reported": {"per_chunk": {k: sorted({m for t in log["chunks"][k]["attempts"] for m in t["models"]})
