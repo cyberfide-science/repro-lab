@@ -75,11 +75,11 @@ data:
   - id: opus_mondo_map
     uri: file://targets/reese-2026-rescore/grounding/opus-mondo-map.tsv
     path: data/reese-2026/opus-mondo-map.tsv
-    # Built once by grounding/build_opus_map.py with claude-opus-5-5 on <fill: date>; see
+    # Built once by grounding/build_opus_map.py with claude-opus-5-5 on 2026-09-27 (chunks 2026-09-27T19:38:49Z to 23:18:56Z); see
     # grounding/opus-mondo-map.meta.json (Claude Code version, OAuth, prompt sha256, chunks, tokens,
     # agreement_rate, gate 0.90).
-    sha256: <fill>
-    size_bytes: <fill>
+    sha256: daec41c1749e436f9ccc6c3c224a3c4a46fbca46a42268049a046e33517bf05e
+    size_bytes: 406597
 
 claims:
   # Pre-registered 2026-09-27, before any run. Values: PMC11302616 Figure 3 caption, "23.6% for the best

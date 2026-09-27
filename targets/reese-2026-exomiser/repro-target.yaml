@@ -111,8 +111,8 @@ data:
     uri: file://targets/reese-2026-rescore/grounding/opus-mondo-map.tsv
     path: data/reese-2026/opus-mondo-map.tsv
     # Same file and sha256 as reese-2026-rescore.
-    sha256: <fill>
-    size_bytes: <fill>
+    sha256: daec41c1749e436f9ccc6c3c224a3c4a46fbca46a42268049a046e33517bf05e
+    size_bytes: 406597
 
 claims:
   # Pre-registered 2026-09-27 (whole cohort), before any run. Values: PMC11302616 Figure 3
