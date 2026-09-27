@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "mondo_id": {"type": "string", "pattern": "^(MONDO:[0-9]{7}|no match)$"},
+          "mondo_label": {"type": "string"}
+        },
+        "required": ["name", "mondo_id", "mondo_label"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["rows"],
+  "additionalProperties": false
+}
