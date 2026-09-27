@@ -1,0 +1,7 @@
+---
+# Exomiser 14.0.1 output options for every case. numGenes 0 = all genes: the tie rule and tie band need
+# every disease item that scores at least as high as the correct one, and a top-N gene cut could split
+# the tie group that decides a rank. Each JSON is reduced to its disease list after its batch.
+outputContributingVariantsOnly: false
+numGenes: 0
+outputFormats: [ JSON ]

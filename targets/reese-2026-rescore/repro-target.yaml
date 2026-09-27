@@ -1,0 +1,213 @@
+# Manifest written 2026-09-27. Claims and tolerances were committed before any scored run.
+# Every value below was read from a source opened on 2026-09-27; the URL or API call is named beside it.
+
+schema_version: 1
+slug: reese-2026-rescore
+status: selected
+
+paper:
+  title: "Systematic benchmarking demonstrates large language models have not reached the diagnostic accuracy of traditional rare-disease decision support tools"
+  doi: 10.1038/s41431-026-02054-5
+  journal: European Journal of Human Genetics
+  year: 2026
+  first_author: Reese
+  last_author: Robinson
+  url: https://doi.org/10.1038/s41431-026-02054-5
+  # Crossref 2026-09-27: volume 34, pages 498-504, published 2026-02-24, CC-BY 4.0.
+  # Preprint: medRxiv 10.1101/2024.07.22.24310816 v3 = PMC11302616.
+
+code:
+  - role: pipeline
+    repo: https://github.com/monarch-initiative/pheval.llm
+    commit: bd7146d15798b4dd968fd64bc9a42e6971aa8fae
+    # 2025-05-27, the commit that added topn_result_*.tsv. `git diff --stat bd7146d a1b38c0 --
+    # src/malco/process/`: 7 files changed, 248 insertions(+), 89 deletions(-) (cleaning, generate_plots,
+    # grounding, mondo_score_utils, process, scoring, summary). Read file by file: no change to any
+    # function called here (formatting, type hints, `== None` -> `is None`, a mutable default replaced
+    # by the same value); summary.py's n10p/nf columns differ, but summarize() is not called here.
+    licence: BSD-3-Clause
+    entrypoint: "malco functions called by score_rescore.py (see deviations)"
+
+environment:
+  kind: docker
+  spec: Dockerfile
+  python: "3.12"           # pyproject.toml at bd7146d: python = "^3.12"
+  notes: >
+    malco's poetry.lock at bd7146d is installed unchanged (Poetry 1.8.4, the version that generated it),
+    into /opt/venv; env-resolved.txt is its pip freeze. The lock pins curategpt 0.2.3, which requires
+    openai 1.65.4 and llm 0.15 as non-optional dependencies, and malco/__init__ imports main, which
+    imports grounding.py, which imports curategpt.store. So these clients are present in the image. They
+    are unreachable at run time: the container runs with --network none, run.sh performs a network check
+    (DNS lookup of api.openai.com and a TCP connection to port 443, 5 s timeout) before scoring and prints
+    "== network check: unreachable (...)", exiting non-zero if either succeeds, and no key variable is set
+    in the container. The CurateGPT path is never called (use_ontogpt_grounding=False). This is an
+    environment note, not a code deviation: the paper's code is not modified. Checked before the run
+    under --network none: every import (malco, curategpt.store, openai, llm) succeeds offline in 14.5 s.
+    build-essential is installed because chroma-hnswlib 0.7.3 (in the lock) has no Python 3.12 wheel and
+    is compiled from its sdist. TQDM_DISABLE=1 keeps malco's progress bars out of scorer.log.
+    oaklib 0.6.21 resolves sqlite:obo:mondo to a pystow cache file it would fetch from
+    https://s3.amazonaws.com/bbop-sqlite/mondo.db.gz (403 on 2026-09-27); run.sh gunzips the pinned
+    mondo.db.gz (below) into that cache location instead, with a fresh mtime so oaklib's one-week cache
+    policy does not refetch.
+
+data:
+  - id: responses_zip
+    uri: https://zenodo.org/records/15324355/files/all_models_responses.zip?download=1
+    path: data/reese-2026/all_models_responses.zip
+    # md5 (Zenodo API): afa3f6484b3c96ad18848151846a1448 -- matched by the fetched copy, 2026-09-27
+    sha256: 3add6cc5764d1b34f4e836ccd9de01187a3b81d87e4d5d5a6a456fb65e08d3ad
+    size_bytes: 9406802
+  - id: gold_tsv
+    uri: https://zenodo.org/records/15324355/files/correct_results.tsv?download=1
+    path: data/reese-2026/correct_results.tsv
+    # md5 (Zenodo API): ef87fc9e2ee4115c21930b70564f5c90 -- matched by the fetched copy, 2026-09-27
+    sha256: e7980547e48b89e61cf0a4b35fb8f5c8660f0dca33232b255fddf8e53482556f
+    size_bytes: 474639
+  - id: mondo_semsql
+    uri: file://data/manual/mondo-semsql-2026-09-27/mondo.db.gz
+    path: data/reese-2026/mondo.db.gz
+    # Copy of https://semanticsql.berkeleybop.io/mondo.db.gz fetched 2026-09-27T18:04:29Z (Last-Modified
+    # 2026-09-26T23:58:50Z); owl:versionIRI obo:mondo/releases/2026-09-01/mondo.owl. Mondo CC BY 4.0.
+    # PENDING: the mirror release data-mondo-semsql-2026-09-27 on cyberfide-science/repro-lab. Until it is
+    # published, uri is a local file:// copy; the swap to the release URL changes only this uri line.
+    sha256: 499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0
+    size_bytes: 242815274
+  - id: opus_mondo_map
+    uri: file://targets/reese-2026-rescore/grounding/opus-mondo-map.tsv
+    path: data/reese-2026/opus-mondo-map.tsv
+    # Built once by grounding/build_opus_map.py with claude-opus-5-5 on <fill: date>; see
+    # grounding/opus-mondo-map.meta.json (Claude Code version, OAuth, prompt sha256, chunks, tokens,
+    # agreement_rate, gate 0.90).
+    sha256: <fill>
+    size_bytes: <fill>
+
+claims:
+  # Pre-registered 2026-09-27, before any run. Values: PMC11302616 Figure 3 caption, "23.6% for the best
+  # performing LLM (o1 preview) ... 31.2% in the top 3 ranks and 36.8% in the top 10 ranks"; top-1 also
+  # in the EJHG abstract. Tolerance source (1): the paper reports one decimal of a percentage, so
+  # +/-0.0005 as a fraction. Cross-check: pheval.llm@bd7146d topn_result_o1_preview.tsv cumulative
+  # counts 1232/1626/1919 over 5213 = 0.23633/0.31191/0.36812, within 0.0005 of each claim.
+  # Two grounding conditions; the tolerance absorbs neither.
+  - id: RS1
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-1, o1 preview — offline floor (OAK exact match only; CurateGPT step not run)"
+    metric: fraction of 5213 cases with the correct diagnosis at rank 1, o1-preview, malco scoring rule
+    value: 0.236
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "PMC11302616 Figure 3 caption, '23.6% for the best performing LLM (o1 preview)'"
+  - id: RS2
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-3, o1 preview — offline floor (OAK exact match only; CurateGPT step not run)"
+    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-3, o1-preview
+    value: 0.312
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "PMC11302616 Figure 3 caption, '31.2% in the top 3 ranks'"
+  - id: RS3
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-10, o1 preview — offline floor (OAK exact match only; CurateGPT step not run)"
+    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-10, o1-preview
+    value: 0.368
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "PMC11302616 Figure 3 caption, '36.8% in the top 10 ranks'"
+  - id: RS4
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-1, o1 preview — substituted grounding (OAK exact match, then a Claude Opus 5.5 mapping table in place of CurateGPT)"
+    metric: fraction of 5213 cases with the correct diagnosis at rank 1, o1-preview, malco scoring rule
+    value: 0.236
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "as RS1"
+  - id: RS5
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-3, o1 preview — substituted grounding (OAK exact match, then a Claude Opus 5.5 mapping table in place of CurateGPT)"
+    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-3, o1-preview
+    value: 0.312
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "as RS2"
+  - id: RS6
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-10, o1 preview — substituted grounding (OAK exact match, then a Claude Opus 5.5 mapping table in place of CurateGPT)"
+    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-10, o1-preview
+    value: 0.368
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "as RS3"
+
+checkpoints:
+  max_download_gb: 5
+  max_stage_minutes: 30
+
+deviations:
+  - what: "RS1-RS3: answer lines are grounded to Mondo by OAK exact matching only; malco's CurateGPT fallback is not run (use_ontogpt_grounding=False)"
+    why: "The fallback queries an OpenAI embedding index at run time; the scored run makes no API call (--network none). Derived from the code: this can only lower the counts."
+    approved_by: "Michael Wolfe, repro-lab maintainer"
+    date: 2026-09-27
+  - what: "RS4-RS6: lines OAK cannot ground are mapped with a one-time Claude Opus 5.5 table (grounding/opus-mondo-map.tsv, built with Claude Code headless under OAuth) instead of CurateGPT/OpenAI embeddings"
+    why: "Reproduces the role of the paper's fallback step without a run-time API call; the table was built, validated (agreement with OAK on OAK-resolved names >= 0.90, fixed before the call) and committed before this run. It can move the counts in either direction."
+    approved_by: "Michael Wolfe, repro-lab maintainer"
+    date: 2026-09-27
+  - what: "Opus mapping table (RS4-RS6, EX4): the echo check in grounding/build_opus_map.py compares echoed and input names after Unicode NFC normalisation, instead of byte-exact, from chunk 80 attempt 4 on"
+    why: "Chunk 80 failed 3/3 only because the input Kohlschuetter-Toenz entry used decomposed diacritics (u/o + U+0308) that Opus echoed precomposed. Exact match implies NFC match, so the 94 accepted chunks are unaffected; only chunk 80 reruns; table names and lookups keep the input string byte-for-byte. Committed before chunk 80 reruns."
+    approved_by: "Michael Wolfe, repro-lab maintainer"
+    date: 2026-09-27
+
+harness:
+  image: repro-lab/reese-2026-rescore
+  results_file: out/reese-2026-rescore/results.csv
+  claim_keys:
+    RS1: RS1_o1_top1_frac_floor
+    RS2: RS2_o1_top3_frac_floor
+    RS3: RS3_o1_top10_frac_floor
+    RS4: RS4_o1_top1_frac_subst
+    RS5: RS5_o1_top3_frac_subst
+    RS6: RS6_o1_top10_frac_subst
+  stages:
+    - id: container_run
+      cmd: ["docker", "run", "--rm", "--network", "none",
+            "-v", "{repo_root}/data/reese-2026:/work/data:ro",
+            "-v", "{repo_root}/out/reese-2026-rescore:/work/out",
+            "repro-lab/reese-2026-rescore"]
+      expected_minutes: <fill>
+
+selection:
+  C1: {score: 2, justification: "Zenodo 10.5281/zenodo.15324355, CC-BY-4.0, no login"}
+  C2: {score: 2, justification: "pheval.llm LICENSE BSD-3-Clause"}
+  C3: {score: 2, justification: "poetry.lock at bd7146d"}
+  C4: {score: 2, justification: "topn_result_o1_preview.tsv counts at bd7146d reproduce the published percentages"}
+  C5: {score: 2, justification: "Eur J Hum Genet 34:498-504 (2026)"}
+  C6: {score: 1, justification: "gh api repos/monarch-initiative/pheval.llm/issues/comments (2026-09-27): the latest maintainer reply on an issue is leokim-l (MEMBER) on 2025-06-17 (issues 45, 49, 57, 62), more than a year old; the latest maintainer comments of any kind are caufieldjh and leokim-l (MEMBER) on pull request 72, 2025-11-21"}
+  C7: {score: 2, justification: "pure Python"}
+  C8: {score: 2, justification: "about 10 MB of answers; CPU only"}
+  total: 15
+
+notes: >
+  Expected: RS1–RS3 (offline floor) at or below the paper's values, likely outside tolerance by
+  construction (the floor can only lower the counts). RS4–RS6 (substituted grounding) could land either
+  side; the passing windows are 1228–1232, 1624–1629 and 1916–1920 cases. The paper-level verdict counts
+  the floor claims, so it is expected to be `partially` or `not_reproduced` whatever RS4–RS6 show.
+
+  Grounding gate, fixed before the first `claude -p` call (committed in grounding/build_opus_map.py as
+  GATE = 0.90): the Opus table is used for RS4–RS6 only if its agreement with OAK on OAK-resolved names
+  is at least 0.90. The gate is never lowered.
+
+  Wording: a substituted-grounding claim within tolerance is "reproduced under substituted grounding",
+  never plain "reproduced", because the paper's CurateGPT grounding step was not run. The floor is a
+  lower bound for this pipeline, not a test of the paper's number.
+
+  Mondo: the paper does not state its Mondo version. This run uses the SemSQL build with versionIRI
+  obo:mondo/releases/2026-09-01/mondo.owl. The authors' score caches (copied from the clone to /work/run
+  and used as their code does) cover the (ID, gold) pairs they scored; pairs they never saw are scored
+  against this Mondo.
+
+  Denominator: 5213, the line count of correct_results.tsv and the figure caption's "cohort of 5213
+  cases"; 5212 response lines are scored (PMID_17886299_patient_BM5 appears twice in the gold file).

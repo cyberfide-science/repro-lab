@@ -15,7 +15,7 @@ Not a harness stage; the scored runs never call it. Three subcommands:
 The script itself uses the standard library only; `names` and `validate` import malco/oaklib from the
 rescore image. Every subprocess is an argv list with no shell.
 """
-import argparse, hashlib, json, os, re, subprocess, sys, zipfile
+import argparse, hashlib, json, os, re, subprocess, sys, unicodedata, zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
@@ -23,6 +23,11 @@ MODEL = "claude-opus-5-5"
 EFFORT = "medium"
 CHUNK = 50
 MAX_ATTEMPTS = 3
+# Echo comparison: NFC-normalised on both sides (user-approved amendment, 2026-09-27). Before it the
+# comparison was byte-exact; chunk 80 failed attempts 1-3 only because an input used decomposed
+# diacritics that the model echoed precomposed. An exact match implies an NFC match. Table names and
+# lookups keep the input string byte-for-byte; only this comparison changes.
+ECHO_COMPARE = "NFC (from chunk 80 attempt 4 on; byte-exact before)"
 GATE = 0.90
 RESPONSES_MEMBER = "all_models_responses/gpt-01-preview.jsonl"
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -96,8 +101,8 @@ def schema_check(obj, names):
             return f"row {i}: a value is not a string"
         if not re.fullmatch(r"MONDO:[0-9]{7}|no match", r["mondo_id"]):
             return f"row {i}: mondo_id {r['mondo_id']!r} does not match the pattern"
-    echoed = [r["name"] for r in obj["rows"]]
-    if echoed != names:
+    echoed = [unicodedata.normalize("NFC", r["name"]) for r in obj["rows"]]
+    if echoed != [unicodedata.normalize("NFC", n) for n in names]:
         return f"echoed names differ from the chunk's names ({len(echoed)} rows for {len(names)} names)"
     return None
 
@@ -142,14 +147,15 @@ def argv_for(prompt, schema):
             "--tools", "", "--safe-mode", "--no-session-persistence"]
 
 
-def run_chunk(k, names, work, prompt, schema, timeout):
+def run_chunk(k, names, work, prompt, schema, timeout, first_attempt=1, prior=None):
     stem = os.path.join(work, f"chunk-{k:03d}")
     mine = chunk_names(names, k)
     stdin = "".join(n + "\n" for n in mine)
     with open(stem + ".in.txt", "w", encoding="utf-8", newline="\n") as f:
         f.write(stdin)
-    rec = {"chunk": k, "n_names": len(mine), "attempts": [], "accepted": None}
-    for m in range(1, MAX_ATTEMPTS + 1):
+    # A rerun (first_attempt > 1) keeps the earlier attempts in the record, numbered as they were.
+    rec = {"chunk": k, "n_names": len(mine), "attempts": list((prior or {}).get("attempts", [])), "accepted": None}
+    for m in range(first_attempt, first_attempt + MAX_ATTEMPTS):
         out_path = f"{stem}.try-{m}.out.json"
         att = {"attempt": m, "file": os.path.basename(out_path)}
         if os.path.exists(out_path):  # an attempt kept from an interrupted query run is evaluated, not repeated
@@ -219,7 +225,8 @@ def cmd_query(a):
     print(f"[query] {len(names)} names, {total} chunks of {CHUNK}; running {len(todo)}; {ver}", flush=True)
     failed = []
     with ThreadPoolExecutor(max_workers=a.jobs) as ex:
-        for rec in ex.map(lambda k: run_chunk(k, names, work, prompt, schema, a.timeout), todo):
+        for rec in ex.map(lambda k: run_chunk(k, names, work, prompt, schema, a.timeout, a.first_attempt,
+                                              log["chunks"].get(str(k)) if a.first_attempt > 1 else None), todo):
             log["chunks"][str(rec["chunk"])] = rec
             if not rec["accepted"]:
                 failed.append(rec["chunk"])
@@ -326,6 +333,7 @@ def cmd_validate(a):
         "effort": EFFORT,
         "temperature": "not settable on this model",
         "chunk_size": CHUNK,
+        "echo_compare": ECHO_COMPARE,
         "n_chunks": total,
         "n_attempts_total": len(atts),
         "n_retried_chunks": sum(1 for r in log["chunks"].values() if len(r["attempts"]) > 1),
@@ -359,6 +367,8 @@ def main():
     p.add_argument("--workdir", required=True)
     p.add_argument("--chunks", type=int, nargs="*", help="chunk indices to run (default: all)")
     p.add_argument("--jobs", type=int, default=1)
+    p.add_argument("--first-attempt", type=int, default=1,
+                   help="number of the first new attempt; a rerun of a failed chunk starts after its last attempt")
     p.add_argument("--timeout", type=int, default=1200)
     p = sub.add_parser("validate")
     p.add_argument("--names", required=True)

@@ -1,0 +1,224 @@
+# Manifest written 2026-09-27. Claims and tolerances were committed before any scored run.
+# Every value below was read from a source opened on 2026-09-27; the URL or API call is named beside it.
+
+schema_version: 1
+slug: reese-2026-exomiser
+status: selected
+
+paper:
+  title: "Systematic benchmarking demonstrates large language models have not reached the diagnostic accuracy of traditional rare-disease decision support tools"
+  doi: 10.1038/s41431-026-02054-5
+  journal: European Journal of Human Genetics
+  year: 2026
+  first_author: Reese
+  last_author: Robinson
+  url: https://doi.org/10.1038/s41431-026-02054-5
+  # Crossref 2026-09-27: volume 34, pages 498-504, published 2026-02-24, CC-BY 4.0.
+  # Preprint: medRxiv 10.1101/2024.07.22.24310816 v3 = PMC11302616.
+
+code:
+  - role: pipeline
+    repo: https://github.com/exomiser/Exomiser
+    commit: 7a4dc1e06bf489f7815a873ef6c34a83c3b2e99b
+    # Tag 14.0.1 (gh api repos/exomiser/Exomiser/releases/tags/14.0.1, 2024-09-03). The program that runs
+    # is the release's distribution zip (data[] exomiser_cli_14_0_1); the image holds a --depth 1 clone of
+    # the tag only so that run.sh's first line reports the tag's commit.
+    licence: AGPL-3.0
+    entrypoint: "java -jar exomiser-cli-14.0.1.jar --batch <file> (--preset phenotype-only per case)"
+  - role: pipeline
+    repo: https://github.com/monarch-initiative/pheval.llm
+    commit: bd7146d15798b4dd968fd64bc9a42e6971aa8fae
+    # malco's score_grounded_result scores every Exomiser item; also grounds o1-preview for EX4.
+    # poetry.lock installed unchanged, as in reese-2026-rescore.
+    licence: BSD-3-Clause
+    entrypoint: "malco functions called by score_exomiser.py"
+  # pheval-exomiser is NOT a dependency: 0.4.13 requires oaklib<0.6.0, and malco's lock pins oaklib 0.6.21.
+  # score_exomiser.py reads the same fields that
+  # pheval_exomiser/post_process/post_process_results_format.py::extract_disease_results_from_json (0.4.13,
+  # wheel sha256 9e39032fec9d14a0512c2340d13a392f448519b787c4f9e184d89e6e88c31183) selects:
+  # priorityResults.HIPHIVE_PRIORITY.diseaseMatches[].model.diseaseId and .score, a null score read as 0.0
+  # (fill_null(0.0)), rows with a null id dropped (drop_nulls()), a gene without HIPHIVE_PRIORITY giving
+  # nothing. Checked 2026-09-27 in a throwaway environment with pheval-exomiser 0.4.13 (pheval 0.7.14,
+  # polars 1.44.2): identical (disease_id, score) multisets on two cases (3937 and 8634 items).
+
+environment:
+  kind: docker
+  spec: Dockerfile
+  python: "3.12"           # pheval.llm pyproject.toml at bd7146d: python = "^3.12"
+  notes: >
+    Java: Eclipse Temurin 17 JRE copied by digest into the python:3.12-slim image (Exomiser 14.0.1 needs
+    Java 17 or later). malco's poetry.lock is installed unchanged, as in reese-2026-rescore (curategpt,
+    openai 1.65.4 and llm 0.15 are present and unreachable: --network none, and run.sh's network check).
+    application.properties sets exomiser.phenotype.data-version=2406 and exomiser.hg19.data-version=2406.
+    The hg19 data is a startup requirement, not a deviation: Exomiser 14.0.1 does not start without one
+    genome assembly configured ("No GenomeAnalysisService instance provided! You must specify at least one
+    exomiser genome assembly data version"), even for phenotype-only analysis. The analysis is
+    --preset phenotype-only, no VCF is given, and no variant data enters any score; the paper's methods
+    also name the 2406 release. Both data zips are extracted inside the container in this run from the
+    hash-verified copies. Cases run in batches of 25 rows, <fill: JVMS> JVMs at a time, each with
+    <fill: -Xmx>; after each batch every JSON is reduced to its disease items and deleted, except rows
+    0001-0020, kept whole as an audit sample.
+
+data:
+  - id: exomiser_cli_14_0_1
+    uri: https://github.com/exomiser/Exomiser/releases/download/14.0.1/exomiser-cli-14.0.1-distribution.zip
+    path: data/reese-2026/exomiser-cli-14.0.1-distribution.zip
+    sha256: fbf2cf34dad8fa0e4c994384cba98dc4500d33a51ccfee6cbe4496846cac6acf
+    size_bytes: 75878122
+  - id: exomiser_2406_phenotype
+    uri: https://data.monarchinitiative.org/exomiser/data/2406_phenotype.zip
+    path: data/reese-2026/2406_phenotype.zip
+    # GCS md5 (x-goog-hash, 2026-09-27): cfa476704db9a67c0f94d99eb67d0fd2 -- matched by the fetched copy. No .sha256 published.
+    sha256: ce471ab12a608732b36ee106b042e5cbb16452dcd334d745b65f1b0eed76d47b
+    size_bytes: 6236618638
+  - id: exomiser_2406_hg19
+    uri: https://data.monarchinitiative.org/exomiser/data/2406_hg19.zip
+    path: data/reese-2026/2406_hg19.zip
+    # Startup requirement of Exomiser 14.0.1 (no GenomeAnalysisService without an assembly), not used
+    # by the phenotype-only analysis. Approved by the user 2026-09-27. GCS md5 (x-goog-hash,
+    # 2026-09-27): 3f4424541291d36d9ca33967f5077ccb -- matched by the fetched copy. Over max_download_gb: a second checkpoint.
+    sha256: aec3963feaff9fdf6f9d4ec6e7b006531193d6fc1305fbe5b9fbe5fba92d28cd
+    size_bytes: 19329398823
+  - id: phenopackets_tgz
+    uri: https://zenodo.org/records/15324355/files/phenopackets.tar.gz?download=1
+    path: data/reese-2026/phenopackets.tar.gz
+    # md5 (Zenodo API): f22818b3d9412188af8d3a3642bc2efd -- matched by the fetched copy, 2026-09-27
+    sha256: 7c84ceaa4407f10a0f19e9fdb0701b592414ff23b4be5151f3e666b41c3264f6
+    size_bytes: 3412803
+  - id: gold_tsv
+    uri: https://zenodo.org/records/15324355/files/correct_results.tsv?download=1
+    path: data/reese-2026/correct_results.tsv
+    # md5 (Zenodo API): ef87fc9e2ee4115c21930b70564f5c90 -- matched by the fetched copy, 2026-09-27
+    sha256: e7980547e48b89e61cf0a4b35fb8f5c8660f0dca33232b255fddf8e53482556f
+    size_bytes: 474639
+  - id: responses_zip
+    uri: https://zenodo.org/records/15324355/files/all_models_responses.zip?download=1
+    path: data/reese-2026/all_models_responses.zip
+    # md5 (Zenodo API): afa3f6484b3c96ad18848151846a1448 -- matched by the fetched copy, 2026-09-27.
+    # EX4 grounds o1-preview under the substituted condition in this container.
+    sha256: 3add6cc5764d1b34f4e836ccd9de01187a3b81d87e4d5d5a6a456fb65e08d3ad
+    size_bytes: 9406802
+  - id: mondo_semsql
+    uri: file://data/manual/mondo-semsql-2026-09-27/mondo.db.gz
+    path: data/reese-2026/mondo.db.gz
+    # Same file as reese-2026-rescore: copy of https://semanticsql.berkeleybop.io/mondo.db.gz fetched
+    # 2026-09-27T18:04:29Z; owl:versionIRI obo:mondo/releases/2026-09-01/mondo.owl. Mondo CC BY 4.0.
+    # PENDING: the mirror release data-mondo-semsql-2026-09-27 on cyberfide-science/repro-lab; the swap
+    # to the release URL changes only this uri line.
+    sha256: 499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0
+    size_bytes: 242815274
+  - id: opus_mondo_map
+    uri: file://targets/reese-2026-rescore/grounding/opus-mondo-map.tsv
+    path: data/reese-2026/opus-mondo-map.tsv
+    # Same file and sha256 as reese-2026-rescore.
+    sha256: <fill>
+    size_bytes: <fill>
+
+claims:
+  # Pre-registered 2026-09-27 (whole cohort), before any run. Values: PMC11302616 Figure 3
+  # caption, "Exomiser placed the correct diagnosis in the first rank in 35.5% of cases ... top 3
+  # ranks ... 46.3% ... top 10 ranks in 58.5%". Cross-check: pheval.llm@bd7146d
+  # topn_result_Exomiser.tsv cumulative counts 1852/2415/3047 over 5213.
+  # Tolerance source (1), the authors' reporting precision: +/-0.0005. No sampling:
+  # every case is run. Passing counts: EX1 1849-1853, EX2 2412-2416, EX3 3047-3052 (authors' 3047
+  # is at the edge: 3047/5213 = 0.5845003).
+  # Tie rule, pre-registered: disease items ordered by score descending, then sha256(disease_id as UTF-8)
+  # ascending. The optimistic and pessimistic tie bands are evidence keys, not claims.
+  - id: EX1
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-1, Exomiser"
+    metric: fraction of 5213 cases with the correct diagnosis at rank 1, Exomiser 14.0.1 / 2406 phenotype-only, malco scoring rule
+    value: 0.355
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "PMC11302616 Figure 3 caption, '35.5% of cases'; EJHG abstract"
+  - id: EX2
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-3, Exomiser"
+    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-3
+    value: 0.463
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "PMC11302616 Figure 3 caption, '46.3% of cases'"
+  - id: EX3
+    figure: "Figure 3 (medRxiv v3, PMC11302616)"
+    panel: "Top-10, Exomiser"
+    metric: fraction of 5213 cases with the correct diagnosis in ranks 1-10
+    value: 0.585
+    tolerance: 0.0005
+    tolerance_type: absolute
+    extraction: manual
+    source: "PMC11302616 Figure 3 caption, '58.5% of cases'"
+  - id: EX4
+    figure: "Abstract and Figure 3"
+    panel: "Exomiser vs o1 preview under substituted grounding, all cases"
+    metric: Exomiser top-1 count exceeds o1-preview top-1 count on the same cases (o1-preview grounded by OAK then the Claude Opus 5.5 table)
+    value: "true"
+    tolerance: null
+    tolerance_type: same_conclusion
+    extraction: manual
+    source: "EJHG abstract: 'The best LLM ranked the correct diagnosis first in 23.6% of cases, whereas Exomiser did so in 35.5% of cases.'"
+
+checkpoints:
+  max_download_gb: 5
+  max_stage_minutes: 30
+
+deviations:
+  - what: "EX4: o1-preview answers are grounded by OAK exact matching, then the one-time Claude Opus 5.5 table, instead of CurateGPT/OpenAI embeddings"
+    why: "Same as reese-2026-rescore RS4-RS6: no run-time API call; the table is committed and hash-verified."
+    approved_by: "Michael Wolfe, repro-lab maintainer"
+    date: 2026-09-27
+  - what: "Opus mapping table (RS4-RS6, EX4): the echo check in grounding/build_opus_map.py compares echoed and input names after Unicode NFC normalisation, instead of byte-exact, from chunk 80 attempt 4 on"
+    why: "Chunk 80 failed 3/3 only because the input Kohlschuetter-Toenz entry used decomposed diacritics (u/o + U+0308) that Opus echoed precomposed. Exact match implies NFC match, so the 94 accepted chunks are unaffected; only chunk 80 reruns; table names and lookups keep the input string byte-for-byte. Committed before chunk 80 reruns."
+    approved_by: "Michael Wolfe, repro-lab maintainer"
+    date: 2026-09-27
+
+harness:
+  image: repro-lab/reese-2026-exomiser
+  results_file: out/reese-2026-exomiser/results.csv
+  claim_keys:
+    EX1: EX1_exomiser_top1_frac
+    EX2: EX2_exomiser_top3_frac
+    EX3: EX3_exomiser_top10_frac
+    EX4: EX4_exomiser_top1_gt_o1_subst_top1
+  stages:
+    - id: container_run
+      # work/reese-2026-exomiser is mounted whole at /work/exo: the container writes raw/ (audit JSON,
+      # rows 0001-0020), items/ (one reduced disease list per row) and raw_json.sha256 there.
+      cmd: ["docker", "run", "--rm", "--network", "none", "--memory", "16g",
+            "-v", "{repo_root}/data/reese-2026:/work/data:ro",
+            "-v", "{repo_root}/work/reese-2026-exomiser:/work/exo",
+            "-v", "{repo_root}/out/reese-2026-exomiser:/work/out",
+            "repro-lab/reese-2026-exomiser"]
+      expected_minutes: <fill>
+
+notes: >
+  Expected: EX1–EX3 at the pre-registered tie order (score, then sha256 of the disease id) may miss by a
+  few cases even if our differential construction matches the authors', because large tie groups (1,462
+  items at score 1.0 in the smoke case) make ranks depend on the order inside ties, which the authors do
+  not report. The pessimistic-to-optimistic band is reported alongside, and the published values are
+  expected to lie within it. EX3 fails at the point if even one case fewer than 3047 is found in the top
+  10. EX4 true at the point.
+
+  Tie rule and band. Exomiser 14.0.1's scores are deterministic but the order of tied items is not (three
+  runs of one case: identical (disease_id, score) sets, different orders). The claim numbers use the
+  pre-registered order above. Evidence keys give each count with tied items ordered best-first (_opt) and
+  worst-first (_pess). A claim outside tolerance at the tie-rule point but whose claimed value lies inside
+  the band is described as such, and stays not_reproduced.
+
+  Differential construction (not published by the authors, fixed here): all genes (numGenes 0); disease
+  items read as above; deduplicated by disease id keeping the highest score; ordered by the tie rule;
+  ORPHA:/Orphanet: items mapped to Mondo by the pinned Mondo's skos:exactMatch, unmapped items kept in
+  place and scoring 0; each item scored with malco's score_grounded_result against the case's gold
+  (exomiser-gold.jsonl), with a copy of the authors' caches; is_correct = score > 0; a case with no item
+  is "not found" and stays in the denominator (5213, as in reese-2026-rescore).
+
+  Case list: cases.tsv, 5212 rows, resolved once by resolve_cases.py (0 unresolved, 0 ambiguous; one
+  phenopacket, PMID_29330883_Subject_2, has no prompt id in the gold file and is not a case). File names
+  inside the container use the row number, never the phenopacket id (27 ids contain "/", 66 contain
+  U+00A0).
+
+  The Opus mapping table's gate (agreement with OAK >= 0.90 on OAK-resolved names) was fixed before its
+  first call; EX4 uses the table only if the gate passed.
