@@ -79,7 +79,7 @@ data:
     # grounding/opus-mondo-map.meta.json (Claude Code version, OAuth, prompt sha256, chunks, tokens,
     # agreement_rate, gate 0.90).
     sha256: c71db9ada79ab2cf34d1e0bbf58799ecf5e2a8ed7e907ea8e6d2dc53d3320065
-    size_bytes: 406597
+    size_bytes: 406599
 
 claims:
   # Pre-registered 2026-09-27, before any run. Values: PMC11302616 Figure 3 caption, "23.6% for the best
@@ -147,7 +147,11 @@ harness:
             "-v", "{repo_root}/data/reese-2026:/work/data:ro",
             "-v", "{repo_root}/out/reese-2026-rescore:/work/out",
             "repro-lab/reese-2026-rescore"]
-      expected_minutes: <fill>
+      # Basis (2026-09-27): the full container on the first 200 responses in id order (RESCORE_SLICE=200,
+      # a timing-only switch never set in a scored run), 32 grounding workers, took t_200 = 806 s = 13.43 min
+      # including image start and imports. 13.43 x 5212 / 200 x 1.5 + 2 = 527. Most of it is malco's
+      # single-process score(), starting from empty caches (see notes).
+      expected_minutes: 527
 
 selection:
   C1: {score: 2, justification: "Zenodo 10.5281/zenodo.15324355, CC-BY-4.0, no login"}
@@ -187,3 +191,12 @@ notes: >
   so, as pre-registered, the claims that depend on it are removed: RS4, RS5 and RS6. The table stays committed as
   the record. The container still writes the substituted-grounding keys to results.csv; they are
   evidence only and back no claim. The deviation entries describing the table are kept unchanged.
+
+  Finding recorded before any scored run (2026-09-27): the authors' committed caches cannot be read in
+  this container. caches/omim_mappings_cache.db and score_grounded_result_cache.db are Berkeley DB hash
+  files in the old DB 1.85 format (header 00 06 15 61; most likely written by macOS's ndbm); Python's
+  dbm on Debian (Berkeley DB 5.3) reports "BDB0210 ... metadata page checksum error", and malco's
+  PersistentCache then opens a new, empty GNU dbm file beside them (0 entries loaded; checked with
+  shelved_cache directly). malco's code is run unchanged, so every (prediction, gold) pair is scored
+  against the pinned Mondo (2026-09-01) rather than read from the authors' cache. The container still
+  copies the caches and prints malco's CacheInfo lines, which show this.
