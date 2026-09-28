@@ -237,17 +237,18 @@ def cmd_analyse():
 # cache (gold-independent); a (prediction, gold) memo avoids repeating a pair. An unmapped ORPHA item and an
 # o1-preview "N/A" item are incorrect without a call: malco's score_grounded_result gives such an id 0.0
 # (it has no OMIM mapping and no descendants but itself).
-_mondo = _terms = None
+_mondo = _terms = _ordo = None
 _pairs = {}
 
 
 def _init_scorer():
-    global _mondo, _terms
+    global _mondo, _terms, _ordo
     from cachetools import LRUCache
     from oaklib import get_adapter
     _mondo = get_adapter("sqlite:obo:mondo")
     _terms = LRUCache(maxsize=2 ** 22)
     _terms.hits = _terms.misses = 0
+    _ordo = load_ordo()
 
 
 def _correct(pred, gold, work):
@@ -399,21 +400,24 @@ def o1_subst(cases):
     return ranks
 
 
-def score_jobs(cases, ordo):
-    jobs, max_tie, mapped, unmapped, no_result = [], 0, 0, 0, 0
-    for c in cases:
-        d = differential(c["row"])
-        preds = predictions(d, ordo)
-        orpha = [p for (did, _), p in zip(d, preds) if did.startswith(("ORPHA:", "Orphanet:"))]
-        mapped += sum(1 for p in orpha if p)
-        unmapped += sum(1 for p in orpha if not p)
-        no_result += not d
-        counts = {}
-        for _, s in d:
-            counts[s] = counts.get(s, 0) + 1
-        max_tie = max([max_tie] + list(counts.values()))
-        jobs.append((c["row"], c["gold_id"], d, preds))
-    return jobs, max_tie, mapped, unmapped, no_result
+def case_items(row):
+    """One case's differential and the ids malco scores for it, built inside a worker (the parent never
+    holds every case's item list: about 33 million items for the cohort)."""
+    d = differential(row)
+    return row, d, predictions(d, _ordo)
+
+
+def case_job(job):
+    """Minimal scoring of one case plus its bookkeeping: items, top item, largest tie, ORPHA mapping."""
+    row, gold = job
+    _, d, preds = case_items(row)
+    counts = {}
+    for _, s in d:
+        counts[s] = counts.get(s, 0) + 1
+    orpha = [(did, p) for (did, _), p in zip(d, preds) if did.startswith(("ORPHA:", "Orphanet:"))]
+    return (minimal((row, gold, d, preds)), len(d), d[0][0] if d else "", max(counts.values(), default=0),
+            sum(1 for _, p in orpha if p), sum(1 for _, p in orpha if not p),
+            next(((did, p) for did, p in orpha if p), None))
 
 
 def cap(x):
@@ -423,18 +427,18 @@ def cap(x):
 def cmd_score():
     cases = read_cases()
     denominator = sum(1 for _ in open(f"{DATA}/correct_results.tsv", encoding="utf-8"))
-    ordo = load_ordo()
     t0 = time.time()
-    jobs, max_tie, mapped, unmapped, no_result = score_jobs(cases, ordo)
-    example = next(((did, p) for _, _, d, preds in jobs for (did, _), p in zip(d, preds)
-                    if did.startswith("ORPHA:") and p), None)
-    print(f"[score] {len(cases)} differentials, {sum(len(j[2]) for j in jobs)} items; ORPHA items mapped "
-          f"{mapped}, unmapped {unmapped}; example {example[0]} -> {example[1]}", flush=True)
-    order = sorted(range(len(jobs)), key=lambda i: (jobs[i][1], jobs[i][0]))  # group by gold for the caches
+    jobs = sorted(((c["row"], c["gold_id"]) for c in cases), key=lambda j: (j[1], j[0]))  # group by gold
     with Pool(SCORERS, initializer=_init_scorer) as pool:
-        got = {r[0]: r for r in pool.imap_unordered(minimal, [jobs[i] for i in order], chunksize=4)}
-    res = [got[c["row"]] for c in cases]
+        got = {r[0][0]: r for r in pool.imap_unordered(case_job, jobs, chunksize=4)}
+    full_res = [got[c["row"]] for c in cases]
+    res = [r[0] for r in full_res]
     n_pairs = sum(r[6] for r in res)
+    mapped, unmapped = sum(r[4] for r in full_res), sum(r[5] for r in full_res)
+    max_tie, no_result = max(r[3] for r in full_res), sum(1 for r in full_res if r[1] == 0)
+    example = next((r[6] for r in full_res if r[6]), None)
+    print(f"[score] {len(cases)} differentials, {sum(r[1] for r in full_res)} items; ORPHA items mapped "
+          f"{mapped}, unmapped {unmapped}; example {example[0]} -> {example[1]}", flush=True)
     print(f"[score] minimal scoring: {n_pairs} (item, gold) pairs in {(time.time() - t0) / 60:.1f} min", flush=True)
     pos = [r[1] for r in res]
     opt = [r[2] for r in res]
@@ -469,10 +473,10 @@ def cmd_score():
     with open(f"{OUT}/per_case.tsv", "w", newline="", encoding="utf-8") as f:
         f.write("row\tid\tgold_id\texomiser_first_correct_rank\texomiser_rank_opt\texomiser_rank_pess\t"
                 "exomiser_top_item\texomiser_n_items\to1_subst_first_correct_rank\n")
-        for c, r, j in zip(cases, res, jobs):
-            d = j[2]
+        for c, fr in zip(cases, full_res):
+            r = fr[0]
             f.write(f"{c['row']}\t{c['prompt_id']}\t{c['gold_id']}\t{cap(r[1])}\t{cap(r[2])}\t{cap(r[3])}\t"
-                    f"{d[0][0] if d else ''}\t{len(d)}\t{o1[c['prompt_id']] or ''}\n")
+                    f"{fr[2]}\t{fr[1]}\t{o1[c['prompt_id']] or ''}\n")
     print(f"[score] Exomiser top1/3/10 {[n(pos, k) for k in (1, 3, 10)]} (opt {[n(opt, k) for k in (1, 3, 10)]}, "
           f"pess {[n(pess, k) for k in (1, 3, 10)]}); o1-preview subst top1 {o1_top1}; over {denominator}")
 
@@ -481,17 +485,16 @@ def cmd_verify(out_path):
     """Pre-registered check of minimal against full scoring: rows 0001-0020 plus the 20 other rows with the
     largest tie group at g (ties by row number). R, O and P capped at 10 must agree on all 40 rows."""
     cases = read_cases()
-    ordo = load_ordo()
+    gold = {c["row"]: c["gold_id"] for c in cases}
     t0 = time.time()
-    jobs, *_ = score_jobs(cases, ordo)
-    by_row = {j[0]: j for j in jobs}
+    jobs = sorted(((c["row"], c["gold_id"]) for c in cases), key=lambda j: (j[1], j[0]))
     with Pool(SCORERS, initializer=_init_scorer) as pool:
-        order = sorted(range(len(jobs)), key=lambda i: (jobs[i][1], jobs[i][0]))
-        mins = {r[0]: r for r in pool.imap_unordered(minimal, [jobs[i] for i in order], chunksize=4)}
+        mins = {r[0][0]: r[0] for r in pool.imap_unordered(case_job, jobs, chunksize=4)}
         t_min = time.time() - t0
         audit = [c["row"] for c in cases[:AUDIT_ROWS]]
         rest = sorted((r for r in mins if r not in audit), key=lambda r: (-(mins[r][5] or 0), r))[:20]
         sample = audit + rest
+        by_row = {row: (row, gold[row], d, preds) for row, d, preds in pool.imap_unordered(case_items, sample)}
         # Full scoring: every distinct (prediction, gold) pair of the sample rows, spread over the workers
         # (sorted by prediction, so a worker's term cache is reused), then each row's ranks from the verdicts.
         pairs = sorted({(p, by_row[r][1]) for r in sample for p in by_row[r][3] if p is not None})
@@ -507,7 +510,7 @@ def cmd_verify(out_path):
         lines.append(f"| {r} | {'audit' if r in audit else 'largest tie'} | {m[5] if m[5] is not None else '-'} | "
                      f"{cap(m[1])} / {cap(m[2])} / {cap(m[3])} | {cap(f[1])} / {cap(f[2])} / {cap(f[3])} | "
                      f"{'yes' if a else 'NO'} |")
-    summary = (f"minimal scoring of all {len(jobs)} cases: {sum(m[6] for m in mins.values())} (item, gold) pairs "
+    summary = (f"minimal scoring of all {len(cases)} cases: {sum(m[6] for m in mins.values())} (item, gold) pairs "
                f"in {t_min / 60:.1f} min on {SCORERS} processes; full scoring of the {len(sample)} sample "
                f"rows: {len(pairs)} distinct pairs; agreement {agree} of {len(sample)}")
     with open(out_path, "w", encoding="utf-8", newline="\n") as fo:
