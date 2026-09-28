@@ -1,0 +1,25 @@
+# Terminal transcript of the run that produced report.json and report.md in this directory (Git Bash on Windows, Docker Desktop). The only edit is that the absolute path of the repository root has been replaced by <repo_root> in the two -v arguments; everything else is as printed. HARNESS_APPROVE=1 answered the stage-duration checkpoint only, under the maintainer's written pre-approval of 2026-09-27 for the rescore scored run and its fresh-clone rerun. The three out-of-tolerance [checkpoint] lines are human-review flags; no outreach follows from them.
+
+$ HARNESS_APPROVE=1 py -3 run_all.py reese-2026-rescore
+[build_env] docker build -t repro-lab/reese-2026-rescore targets/reese-2026-rescore
+[build_env] image repro-lab/reese-2026-rescore id sha256:2a0da7cdf477dbea37ddac47030051691e6aa23d9f0bb4c780ec94a3ebd1e7f2
+[build_env] base python@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f; container python 3.12.14
+[build_env] 0 difference(s) vs targets/reese-2026-rescore/env-resolved.txt
+[fetch_verify] responses_zip: 9406802 bytes, sha256 OK
+[fetch_verify] gold_tsv: 474639 bytes, sha256 OK
+[fetch_verify] mondo_semsql: 242815274 bytes, sha256 OK
+[fetch_verify] opus_mondo_map: 406599 bytes, sha256 OK
+[checkpoint] stage 'container_run' expected 527 min (> 30 min limit). -- approved via HARNESS_APPROVE=1
+[run_pipeline] stage container_run: docker run --rm --network none -v <repo_root>/data/reese-2026:/work/data:ro -v <repo_root>/out/reese-2026-rescore:/work/out repro-lab/reese-2026-rescore
+[run_pipeline]   exit 0 in 4710.95 s; log at work/reese-2026-rescore/logs/container_run.log
+[run_pipeline] code_sha from the run's own output: bd7146d15798b4dd968fd64bc9a42e6971aa8fae
+[run_pipeline] extracted 22 metrics -> work/reese-2026-rescore/results.json
+[diff_claims] 0/3 claims within tolerance -> verdict: not_reproduced
+[checkpoint] RS1 (RS1_o1_top1_frac_floor): claimed 0.236, obtained 0.20161135622482257 [absolute 0.0005] -- needs human review before any outreach
+[checkpoint] RS2 (RS2_o1_top3_frac_floor): claimed 0.312, obtained 0.2649146364857088 [absolute 0.0005] -- needs human review before any outreach
+[checkpoint] RS3 (RS3_o1_top10_frac_floor): claimed 0.368, obtained 0.2973335891041627 [absolute 0.0005] -- needs human review before any outreach
+[diff_claims] report.json validated against harness/schema/report.schema.json
+[diff_claims] wrote reports/reese-2026-rescore/report.json
+[render_report] wrote reports/reese-2026-rescore/report.md
+[run_all] done: reports/reese-2026-rescore/report.json, reports/reese-2026-rescore/report.md
+$ echo $?  ->  0

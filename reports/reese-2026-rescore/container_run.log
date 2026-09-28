@@ -1,0 +1,40 @@
+== git HEAD: bd7146d15798b4dd968fd64bc9a42e6971aa8fae
+== python: Python 3.12.14
+== mondo version: obo:mondo/releases/2026-09-01/mondo.owl
+== gpt-01-preview.jsonl: 5212 lines
+== network check: unreachable (gaierror, gaierror)
+== score_rescore.py (repro-lab's own script; malco's functions)
+[score_rescore] grounded 5212 responses with 32 workers
+BDB0210 caches/omim_mappings_cache.db: metadata page checksum error
+BDB0210 caches/score_grounded_result_cache.db: metadata page checksum error
+CacheInfo: hits=66694, misses=7611, maxsize=524288, currsize=7611
+CacheInfo: hits=24290, misses=6975, maxsize=524288, currsize=6975
+BDB0210 caches/omim_mappings_cache.db: metadata page checksum error
+BDB0210 caches/score_grounded_result_cache.db: metadata page checksum error
+CacheInfo: hits=26140, misses=103, maxsize=524288, currsize=7714
+CacheInfo: hits=30851, misses=414, maxsize=524288, currsize=7389
+[score_rescore] floor top1/3/10 [1051, 1381, 1550], subst top1/3/10 [1101, 1503, 1726], over 5213
+key,value
+RS1_o1_top1_frac_floor,0.20161135622482257
+RS2_o1_top3_frac_floor,0.2649146364857088
+RS3_o1_top10_frac_floor,0.2973335891041627
+RS4_o1_top1_frac_subst,0.21120276232495683
+RS5_o1_top3_frac_subst,0.28831766737003645
+RS6_o1_top10_frac_subst,0.3310953385766353
+denominator_cases,5213
+scored_cases,5212
+o1_floor_n_top1,1051
+o1_floor_n_top3,1381
+o1_floor_n_top10,1550
+o1_subst_n_top1,1101
+o1_subst_n_top3,1503
+o1_subst_n_top10,1726
+o1_floor_mrr,0.2357863112227202
+o1_subst_mrr,0.25314972503251804
+o1_items_total,31265
+o1_floor_items_na,6998
+o1_subst_items_na,5179
+o1_subst_table_hits,1819
+opus_map_sha256,c71db9ada79ab2cf34d1e0bbf58799ecf5e2a8ed7e907ea8e6d2dc53d3320065
+opus_map_agreement_rate,0.26279317697228144
+== git status --porcelain inside the clone after the run (empty means untouched):
