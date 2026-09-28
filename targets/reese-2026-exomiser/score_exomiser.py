@@ -44,7 +44,7 @@ Tie band (evidence): with s* the highest Exomiser score among correct items, opt
 scoring above s*; pessimistic rank = items above s* + incorrect items scoring exactly s* + 1.
 exomiser_max_tie_size is the largest number of items sharing one score in any case's differential.
 """
-import csv, gzip, hashlib, io, json, os, shutil, subprocess, sys, tarfile, time
+import csv, gzip, hashlib, io, json, os, shutil, subprocess, sys, tarfile, threading, time
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import Pool
 
@@ -56,6 +56,7 @@ CASE_DIR, BATCH_DIR = "/work/cases", "/work/batches"
 CLI = "/work/exomiser-cli-14.0.1"
 OPTIONS = "/work/output-options.yml"
 BATCH_SIZE, JVMS, XMX, AUDIT_ROWS = 25, 4, "3g", 20
+REDUCERS = 2  # concurrent JSON reductions; each holds one case JSON (up to about 0.3 GB) as text
 SCORERS = int(os.environ.get("SCORERS", "12"))  # scoring processes, about 0.5 GiB each (one Mondo adapter): 12 fit in --memory 16g
 NA = [("N/A", "No grounding found")]
 
@@ -98,9 +99,41 @@ def cmd_cases():
 
 
 # ---------------------------------------------------------------- analyse
+def iter_genes(path, block=1 << 24):
+    """The elements of the top-level JSON array, decoded one at a time with json.JSONDecoder.raw_decode from
+    a buffer refilled in 16 MiB blocks, so a case output (up to about 0.9 GB) is never held whole, as text
+    or as objects. Every element is a JSON object, so a buffer cut inside one cannot decode early. Yields
+    exactly the elements json.load(path) would return (checked on the audit rows)."""
+    dec = json.JSONDecoder()
+    with open(path, encoding="utf-8") as f:
+        buf, eof = f.read(block), False
+        i = buf.index("[") + 1
+        while True:
+            while i < len(buf) and buf[i] in " \t\r\n,":
+                i += 1
+            if i == len(buf):
+                if eof:
+                    raise ValueError(f"{path}: JSON array not closed")
+                more = f.read(block)
+                buf, i, eof = more, 0, not more
+                continue
+            if buf[i] == "]":
+                return
+            try:
+                obj, j = dec.raw_decode(buf, i)
+            except json.JSONDecodeError:
+                if eof:
+                    raise
+                more = f.read(block)
+                buf, i, eof = buf[i:] + more, 0, not more
+                continue
+            yield obj
+            i = j
+
+
 def read_items(path):
     items = []
-    for gi, g in enumerate(json.load(open(path, encoding="utf-8"))):
+    for gi, g in enumerate(iter_genes(path)):
         hp = (g.get("priorityResults") or {}).get("HIPHIVE_PRIORITY")
         if not hp:
             continue
@@ -156,7 +189,7 @@ def cmd_analyse():
             for row in b:
                 f.write(f"--sample {CASE_DIR}/case-{row}.json --preset phenotype-only --output {OPTIONS} "
                         f"--output-format JSON --output-directory {RAW} --output-filename case-{row}\n")
-    t0 = time.time()
+    t0, reducers = time.time(), threading.BoundedSemaphore(REDUCERS)
     print(f"[analyse] {len(rows)} cases in {len(batches)} batches of {BATCH_SIZE}; {JVMS} JVMs at a time, -Xmx{XMX}",
           flush=True)
 
@@ -170,8 +203,10 @@ def cmd_analyse():
         if rc != 0:
             print(open(log, encoding="utf-8", errors="replace").read()[-4000:], flush=True)
             raise SystemExit(f"[analyse] batch {k:03d} (rows {b[0]}-{b[-1]}) exited {rc}; stopping")
-        if subprocess.run([sys.executable, __file__, "reduce", str(k)]).returncode != 0:
-            raise SystemExit(f"[analyse] reducing batch {k:03d} failed; stopping")
+        with reducers:  # at most REDUCERS reductions at once, beside the JVMs, inside --memory 16g
+            rc = subprocess.run([sys.executable, __file__, "reduce", str(k)]).returncode
+        if rc != 0:
+            raise SystemExit(f"[analyse] reducing batch {k:03d} failed (exit {rc}); stopping")
         print(f"[analyse] batch {k + 1}/{len(batches)} rows {b[0]}-{b[-1]}: {time.time() - tb:.0f} s "
               f"(elapsed {(time.time() - t0) / 60:.1f} min)", flush=True)
 
