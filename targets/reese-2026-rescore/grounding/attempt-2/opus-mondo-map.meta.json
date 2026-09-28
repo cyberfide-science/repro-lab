@@ -1,0 +1,353 @@
+{
+  "model_requested": "claude-opus-5-5",
+  "model_reported": {
+    "per_chunk": {
+      "0": [
+        "claude-opus-5-5"
+      ],
+      "1": [
+        "claude-opus-5-5"
+      ],
+      "2": [
+        "claude-opus-5-5"
+      ],
+      "3": [
+        "claude-opus-5-5"
+      ],
+      "4": [
+        "claude-opus-5-5"
+      ],
+      "5": [
+        "claude-opus-5-5"
+      ],
+      "6": [
+        "claude-opus-5-5"
+      ],
+      "7": [
+        "claude-opus-5-5"
+      ],
+      "8": [
+        "claude-opus-5-5"
+      ],
+      "9": [
+        "claude-opus-5-5"
+      ],
+      "10": [
+        "claude-opus-5-5"
+      ],
+      "11": [
+        "claude-opus-5-5"
+      ],
+      "12": [
+        "claude-opus-5-5"
+      ],
+      "13": [
+        "claude-opus-5-5"
+      ],
+      "14": [
+        "claude-opus-5-5"
+      ],
+      "15": [
+        "claude-opus-5-5"
+      ],
+      "16": [
+        "claude-opus-5-5"
+      ],
+      "17": [
+        "claude-opus-5-5"
+      ],
+      "18": [
+        "claude-opus-5-5"
+      ],
+      "19": [
+        "claude-opus-5-5"
+      ],
+      "20": [
+        "claude-opus-5-5"
+      ],
+      "21": [
+        "claude-opus-5-5"
+      ],
+      "22": [
+        "claude-opus-5-5"
+      ],
+      "23": [
+        "claude-opus-5-5"
+      ],
+      "24": [
+        "claude-opus-5-5"
+      ],
+      "25": [
+        "claude-opus-5-5"
+      ],
+      "26": [
+        "claude-opus-5-5"
+      ],
+      "27": [
+        "claude-opus-5-5"
+      ],
+      "28": [
+        "claude-opus-5-5"
+      ],
+      "29": [
+        "claude-opus-5-5"
+      ],
+      "30": [
+        "claude-opus-5-5"
+      ],
+      "31": [
+        "claude-opus-5-5"
+      ],
+      "32": [
+        "claude-opus-5-5"
+      ],
+      "33": [
+        "claude-opus-5-5"
+      ],
+      "34": [
+        "claude-opus-5-5"
+      ],
+      "35": [
+        "claude-opus-5-5"
+      ],
+      "36": [
+        "claude-opus-5-5"
+      ],
+      "37": [
+        "claude-opus-5-5"
+      ],
+      "38": [
+        "claude-opus-5-5"
+      ],
+      "39": [
+        "claude-opus-5-5"
+      ],
+      "40": [
+        "claude-opus-5-5"
+      ],
+      "41": [
+        "claude-opus-5-5"
+      ],
+      "42": [
+        "claude-opus-5-5"
+      ],
+      "43": [
+        "claude-opus-5-5"
+      ],
+      "44": [
+        "claude-opus-5-5"
+      ],
+      "45": [
+        "claude-opus-5-5"
+      ],
+      "46": [
+        "claude-opus-5-5"
+      ],
+      "47": [
+        "claude-opus-5-5"
+      ],
+      "48": [
+        "claude-opus-5-5"
+      ],
+      "49": [
+        "claude-opus-5-5"
+      ],
+      "50": [
+        "claude-opus-5-5"
+      ],
+      "51": [
+        "claude-opus-5-5"
+      ],
+      "52": [
+        "claude-opus-5-5"
+      ],
+      "53": [
+        "claude-opus-5-5"
+      ],
+      "54": [
+        "claude-opus-5-5"
+      ],
+      "55": [
+        "claude-opus-5-5"
+      ],
+      "56": [
+        "claude-opus-5-5"
+      ],
+      "57": [
+        "claude-opus-5-5"
+      ],
+      "58": [
+        "claude-opus-5-5"
+      ],
+      "59": [
+        "claude-opus-5-5"
+      ],
+      "60": [
+        "claude-opus-5-5"
+      ],
+      "61": [
+        "claude-opus-5-5"
+      ],
+      "62": [
+        "claude-opus-5-5"
+      ],
+      "63": [
+        "claude-opus-5-5"
+      ],
+      "64": [
+        "claude-opus-5-5"
+      ],
+      "65": [
+        "claude-opus-5-5"
+      ],
+      "66": [
+        "claude-opus-5-5"
+      ],
+      "67": [
+        "claude-opus-5-5"
+      ],
+      "68": [
+        "claude-opus-5-5"
+      ],
+      "69": [
+        "claude-opus-5-5"
+      ],
+      "70": [
+        "claude-opus-5-5"
+      ],
+      "71": [
+        "claude-opus-5-5"
+      ],
+      "72": [
+        "claude-opus-5-5"
+      ],
+      "73": [
+        "claude-opus-5-5"
+      ],
+      "74": [
+        "claude-opus-5-5"
+      ],
+      "75": [
+        "claude-opus-5-5"
+      ],
+      "76": [
+        "claude-opus-5-5"
+      ],
+      "77": [
+        "claude-opus-5-5"
+      ],
+      "78": [
+        "claude-opus-5-5"
+      ],
+      "79": [
+        "claude-opus-5-5"
+      ],
+      "80": [
+        "claude-opus-5-5"
+      ],
+      "81": [
+        "claude-opus-5-5"
+      ],
+      "82": [
+        "claude-opus-5-5"
+      ],
+      "83": [
+        "claude-opus-5-5"
+      ],
+      "84": [
+        "claude-opus-5-5"
+      ],
+      "85": [
+        "claude-opus-5-5"
+      ],
+      "86": [
+        "claude-opus-5-5"
+      ],
+      "87": [
+        "claude-opus-5-5"
+      ],
+      "88": [
+        "claude-opus-5-5"
+      ],
+      "89": [
+        "claude-opus-5-5"
+      ],
+      "90": [
+        "claude-opus-5-5"
+      ],
+      "91": [
+        "claude-opus-5-5"
+      ],
+      "92": [
+        "claude-opus-5-5"
+      ],
+      "93": [
+        "claude-opus-5-5"
+      ],
+      "94": [
+        "claude-opus-5-5"
+      ]
+    },
+    "distinct": [
+      "claude-opus-5-5"
+    ]
+  },
+  "claude_code_version": [
+    "2.1.283 (Claude Code)"
+  ],
+  "auth": "Claude Code OAuth login (no API key)",
+  "argv": [
+    "claude",
+    "-p",
+    "--model",
+    "claude-opus-5-5",
+    "--effort",
+    "medium",
+    "--output-format",
+    "json",
+    "--json-schema",
+    "<grounding/attempt-2/schema.json>",
+    "--system-prompt",
+    "<grounding/attempt-2/prompt.md>",
+    "--tools",
+    "",
+    "--safe-mode",
+    "--no-session-persistence",
+    "(stdin: chunk names, one per line)"
+  ],
+  "prompt_sha256": "abf8ceb00b3a4eef0658d15808d355da1f22aabe5ea2905174ccab96ebab9b03",
+  "schema_sha256": "473c15aaec0ab67ada52fff25f10dae2830e2c4a7f0ceed29f118d1e9d5ac4bd",
+  "names_sha256": "8660802a52fb989c2b28b9c130f2419ffcd233c9f52fe7d4d1495f087bd6a129",
+  "effort": "medium",
+  "temperature": "not settable on this model",
+  "chunk_size": 50,
+  "echo_compare": "NFC (from chunk 80 attempt 4 on; byte-exact before)",
+  "n_chunks": 95,
+  "n_attempts_total": 95,
+  "n_retried_chunks": 0,
+  "date_utc": {
+    "start": "2026-09-28T01:33:58+00:00",
+    "end": "2026-09-28T01:52:13+00:00"
+  },
+  "usage": {
+    "input_tokens": 190,
+    "output_tokens": 528698,
+    "counted_over": "accepted and rejected attempts"
+  },
+  "mondo_version": [
+    "obo:mondo/releases/2026-09-01/mondo.owl"
+  ],
+  "n_names": 4729,
+  "n_valid": 1849,
+  "n_invalid": 2880,
+  "n_oak_resolved": 1876,
+  "n_agree": 665,
+  "agreement_rate": 0.35447761194029853,
+  "gate": 0.9,
+  "gate_passed": false,
+  "confidence_distribution": {
+    "high": 511,
+    "medium": 1174,
+    "low": 3044
+  }
+}
