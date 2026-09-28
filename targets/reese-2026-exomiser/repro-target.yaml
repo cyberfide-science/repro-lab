@@ -55,8 +55,8 @@ environment:
     exomiser genome assembly data version"), even for phenotype-only analysis. The analysis is
     --preset phenotype-only, no VCF is given, and no variant data enters any score; the paper's methods
     also name the 2406 release. Both data zips are extracted inside the container in this run from the
-    hash-verified copies. Cases run in batches of 25 rows, <fill: JVMS> JVMs at a time, each with
-    <fill: -Xmx>; after each batch every JSON is reduced to its disease items and deleted, except rows
+    hash-verified copies. Cases run in batches of 25 rows, 4 JVMs at a time, each with
+    -Xmx3g (measured 2026-09-27: 4 concurrent 25-case batches, -Xmx3g, --memory 16g: 100 cases in 387 s, peak 14.5 GiB, no out-of-memory; one batch alone without -Xmx peaked at 6.6 GiB); Exomiser writes each JSON inside the container and after each batch every JSON is reduced to its disease items and deleted, except rows
     0001-0020, kept whole as an audit sample.
 
 data:
@@ -112,7 +112,7 @@ data:
     path: data/reese-2026/opus-mondo-map.tsv
     # Same file and sha256 as reese-2026-rescore.
     sha256: c71db9ada79ab2cf34d1e0bbf58799ecf5e2a8ed7e907ea8e6d2dc53d3320065
-    size_bytes: 406597
+    size_bytes: 406599
 
 claims:
   # Pre-registered 2026-09-27 (whole cohort), before any run. Values: PMC11302616 Figure 3
@@ -218,3 +218,8 @@ notes: >
   so, as pre-registered, the claims that depend on it are removed: EX4. The table stays committed as
   the record. The container still writes the substituted-grounding keys to results.csv; they are
   evidence only and back no claim. The deviation entries describing the table are kept unchanged.
+
+  Finding recorded before any scored run (2026-09-27): the authors' committed malco caches cannot be read
+  in this container (Berkeley DB 1.85-format files; Debian's dbm reports "BDB0210 ... metadata page
+  checksum error" and malco's PersistentCache starts an empty cache). malco's code is run unchanged, so
+  every (item, gold) pair is scored against the pinned Mondo; see the same note in reese-2026-rescore.
