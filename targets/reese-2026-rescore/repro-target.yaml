@@ -49,6 +49,15 @@ environment:
     https://s3.amazonaws.com/bbop-sqlite/mondo.db.gz (403 on 2026-09-27); run.sh gunzips the pinned
     mondo.db.gz (below) into that cache location instead, with a fresh mtime so oaklib's one-week cache
     policy does not refetch.
+    The authors' committed score caches (caches/*.db, Berkeley DB 1.85 hash, macOS ndbm) are not readable
+    by Python on Linux; malco opens an empty cache and scores every pair live against the pinned Mondo
+    2026-09-01. A read-only conversion was attempted before any scored run (convert_caches.py, kept as the
+    record and not called by run.sh): its reader read every pair (48,522 and 65,235, equal to the files'
+    header counts; checks (a) and (b) passed), but the pre-registered check (c) required all 500 sampled
+    score keys to be cache hits through malco's own code and 499 were: the missed key is
+    ('MONDO:0007235', nan), a float NaN gold, which equals nothing and so can never be a hit. The 100%
+    check failed, so the conversion was abandoned without a further attempt and the caches were left as
+    they are.
 
 data:
   - id: responses_zip
