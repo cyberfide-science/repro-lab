@@ -89,18 +89,27 @@ def cmd_names(a):
 
 
 # ---------------------------------------------------------------- query (host)
-def schema_check(obj, names):
-    """Structure of grounding/schema.json, checked here too (the CLI's --json-schema is the first check),
-    plus the echo rule: exactly the chunk's names, in order."""
+def row_spec(schema_text):
+    """The row object of the schema in use: {key: property schema}. Attempt 1's schema has name, mondo_id,
+    mondo_label; attempt 2's adds confidence."""
+    return json.loads(schema_text)["properties"]["rows"]["items"]["properties"]
+
+
+def schema_check(obj, names, spec):
+    """Structure of the attempt's schema.json, checked here too (the CLI's --json-schema is the first
+    check), plus the echo rule: exactly the chunk's names, in order."""
     if not isinstance(obj, dict) or set(obj) != {"rows"} or not isinstance(obj["rows"], list):
         return "top level is not {rows: [...]}"
     for i, r in enumerate(obj["rows"]):
-        if not isinstance(r, dict) or set(r) != {"name", "mondo_id", "mondo_label"}:
-            return f"row {i}: keys are not name, mondo_id, mondo_label"
+        if not isinstance(r, dict) or set(r) != set(spec):
+            return f"row {i}: keys are not {', '.join(spec)}"
         if not all(isinstance(r[k], str) for k in r):
             return f"row {i}: a value is not a string"
-        if not re.fullmatch(r"MONDO:[0-9]{7}|no match", r["mondo_id"]):
-            return f"row {i}: mondo_id {r['mondo_id']!r} does not match the pattern"
+        for k, ps in spec.items():
+            if "pattern" in ps and not re.fullmatch(ps["pattern"].strip("^$"), r[k]):
+                return f"row {i}: {k} {r[k]!r} does not match the pattern"
+            if "enum" in ps and r[k] not in ps["enum"]:
+                return f"row {i}: {k} {r[k]!r} is not one of {ps['enum']}"
     echoed = [unicodedata.normalize("NFC", r["name"]) for r in obj["rows"]]
     if echoed != [unicodedata.normalize("NFC", n) for n in names]:
         return f"echoed names differ from the chunk's names ({len(echoed)} rows for {len(names)} names)"
@@ -177,7 +186,7 @@ def run_chunk(k, names, work, prompt, schema, timeout, first_attempt=1, prior=No
         cli_out = open(out_path, encoding="utf-8", errors="replace").read()
         att["models"], att["usage"] = models_and_usage(cli_out)
         obj, where = structured(cli_out)
-        problem = where if obj is None else schema_check(obj, mine)
+        problem = where if obj is None else schema_check(obj, mine, row_spec(schema))
         att["structured_from"] = where if obj is not None else None
         att["problem"] = problem
         rec["attempts"].append(att)
@@ -210,8 +219,8 @@ def cmd_query(a):
     os.makedirs(work, exist_ok=True)
     if os.path.exists(os.path.join(work, "CLAUDE.md")):
         sys.exit("[query] the working directory holds a CLAUDE.md; it must not")
-    prompt = open(os.path.join(HERE, "prompt.md"), encoding="utf-8").read()
-    schema = open(os.path.join(HERE, "schema.json"), encoding="utf-8").read()
+    prompt = open(os.path.join(a.grounding_dir, "prompt.md"), encoding="utf-8").read()
+    schema = open(os.path.join(a.grounding_dir, "schema.json"), encoding="utf-8").read()
     json.loads(schema)
     log_path = os.path.join(work, "query-log.json")
     log = json.load(open(log_path, encoding="utf-8")) if os.path.exists(log_path) else {
@@ -233,13 +242,13 @@ def cmd_query(a):
             json.dump(log, open(log_path, "w", encoding="utf-8", newline="\n"), indent=1)
     log["date_utc"]["end"] = now()
     json.dump(log, open(log_path, "w", encoding="utf-8", newline="\n"), indent=1)
-    write_chunks_sha256(work, log, os.path.join(HERE, "chunks.sha256"))
+    write_chunks_sha256(work, log, os.path.join(a.grounding_dir, "chunks.sha256"))
     wrong = sorted({m for r in log["chunks"].values() for t in r["attempts"] for m in t["models"]} - {MODEL})
     if wrong:
         sys.exit(f"[query] the CLI reported model(s) {wrong}, not {MODEL}; stopping")
     if failed:
         sys.exit(f"[query] chunk(s) {failed} failed all {MAX_ATTEMPTS} attempts; stopping")
-    print(f"[query] done; grounding/chunks.sha256 written", flush=True)
+    print(f"[query] done; {label(a.grounding_dir)}/chunks.sha256 written", flush=True)
 
 
 # ---------------------------------------------------------------- validate (container)
@@ -254,7 +263,8 @@ def cmd_validate(a):
     if sorted(int(k) for k in log["chunks"]) != list(range(total)):
         sys.exit(f"[validate] query-log.json does not cover chunks 0..{total - 1}")
     listed = {}
-    for line in open(os.path.join(HERE, "chunks.sha256"), encoding="utf-8"):
+    spec = row_spec(open(os.path.join(a.grounding_dir, "schema.json"), encoding="utf-8").read())
+    for line in open(os.path.join(a.grounding_dir, "chunks.sha256"), encoding="utf-8"):
         h, fname, role = line.split()
         listed[fname] = (h, role)
     for fname, (h, _) in listed.items():
@@ -274,7 +284,7 @@ def cmd_validate(a):
         if listed.get(acc, (None, None))[1] != "accepted":
             sys.exit(f"[validate] {acc} is not listed as accepted in chunks.sha256")
         obj, _ = structured(open(os.path.join(work, acc), encoding="utf-8").read())
-        problem = None if obj is None else schema_check(obj, chunk_names(names, k))
+        problem = None if obj is None else schema_check(obj, chunk_names(names, k), spec)
         if obj is None or problem:
             sys.exit(f"[validate] accepted output {acc} does not pass the acceptance rule: {problem}")
         # The table keeps the INPUT name byte-for-byte, never the echo (they can differ under NFC).
@@ -299,10 +309,12 @@ def cmd_validate(a):
         n_oak += bool(oak_ids)
         n_agree += agrees
         table.append([r["name"], mid, mlabel, str(valid).lower(), eff, ";".join(oak_ids),
-                      str(bool(oak_ids)).lower(), str(agrees).lower() if oak_ids else ""])
+                      str(bool(oak_ids)).lower(), str(agrees).lower() if oak_ids else ""]
+                     + ([r["confidence"]] if "confidence" in spec else []))
     rate = n_agree / n_oak if n_oak else None
     with open(a.out_tsv, "w", encoding="utf-8", newline="\n") as f:
-        f.write("name\topus_mondo_id\topus_mondo_label\tvalid\teffective_mondo_id\toak_ids\toak_resolved\tagrees\n")
+        f.write("name\topus_mondo_id\topus_mondo_label\tvalid\teffective_mondo_id\toak_ids\toak_resolved\tagrees"
+                + ("\tconfidence" if "confidence" in spec else "") + "\n")
         for t in table:
             if any("\t" in c or "\n" in c for c in t):
                 sys.exit(f"[validate] a field contains a tab or line break: {t!r}")
@@ -327,9 +339,10 @@ def cmd_validate(a):
                           {"value": None, "reason": "the CLI's JSON output reported no model id"},
         "claude_code_version": log["claude_code_version"],
         "auth": "Claude Code OAuth login (no API key)",
-        "argv": argv_for("<grounding/prompt.md>", "<grounding/schema.json>") + ["(stdin: chunk names, one per line)"],
-        "prompt_sha256": sha256_file(os.path.join(HERE, "prompt.md")),
-        "schema_sha256": sha256_file(os.path.join(HERE, "schema.json")),
+        "argv": argv_for(f"<{label(a.grounding_dir)}/prompt.md>", f"<{label(a.grounding_dir)}/schema.json>")
+                + ["(stdin: chunk names, one per line)"],
+        "prompt_sha256": sha256_file(os.path.join(a.grounding_dir, "prompt.md")),
+        "schema_sha256": sha256_file(os.path.join(a.grounding_dir, "schema.json")),
         "names_sha256": sha256_file(a.names),
         "effort": EFFORT,
         "temperature": "not settable on this model",
@@ -350,11 +363,19 @@ def cmd_validate(a):
         "gate": GATE,
         "gate_passed": rate is not None and rate >= GATE,
     }
+    if "confidence" in spec:  # recorded only; used neither by the gate nor by any lookup
+        meta["confidence_distribution"] = {c: sum(1 for r in rows if r["confidence"] == c)
+                                           for c in spec["confidence"]["enum"]}
     if models and models != [MODEL]:
         sys.exit(f"[validate] model_reported {models} differs from {MODEL}; stopping")
     json.dump(meta, open(a.out_meta, "w", encoding="utf-8", newline="\n"), indent=2)
     print(f"[validate] {len(names)} names, {n_valid} valid, {n_oak} OAK-resolved, {n_agree} agree; "
           f"agreement_rate {rate} (gate {GATE}): {'PASSED' if meta['gate_passed'] else 'FAILED'}")
+
+
+def label(gdir):
+    rel = os.path.relpath(gdir, HERE).replace(os.sep, "/")
+    return "grounding" if rel == "." else f"grounding/{rel}"
 
 
 def main():
@@ -371,11 +392,13 @@ def main():
     p.add_argument("--first-attempt", type=int, default=1,
                    help="number of the first new attempt; a rerun of a failed chunk starts after its last attempt")
     p.add_argument("--timeout", type=int, default=1200)
+    p.add_argument("--grounding-dir", default=HERE, help="the attempt's directory: prompt.md, schema.json, outputs")
     p = sub.add_parser("validate")
     p.add_argument("--names", required=True)
     p.add_argument("--workdir", required=True)
     p.add_argument("--out-tsv", required=True)
     p.add_argument("--out-meta", required=True)
+    p.add_argument("--grounding-dir", default=HERE, help="the attempt's directory: schema.json, chunks.sha256")
     a = ap.parse_args()
     {"names": cmd_names, "query": cmd_query, "validate": cmd_validate}[a.cmd](a)
 

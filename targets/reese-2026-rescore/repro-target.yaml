@@ -133,6 +133,14 @@ deviations:
     why: "Chunk 80 failed 3/3 only because the input Kohlschuetter-Toenz entry used decomposed diacritics (u/o + U+0308) that Opus echoed precomposed. Exact match implies NFC match, so the 94 accepted chunks are unaffected; only chunk 80 reruns; table names and lookups keep the input string byte-for-byte. Committed before chunk 80 reruns."
     approved_by: "Michael Wolfe, repro-lab maintainer"
     date: 2026-09-27
+  - what: "Opus mapping table, attempt 1 (committed at 851a94d): failed the pre-registered gate, agreement with OAK 0.2628 against 0.90; the prompt told the model to abstain when unsure, and it returned no match for 1,323 of 1,876 OAK-resolvable names. RS4-RS6 and EX4 were removed."
+    why: "Recorded so the substituted-grounding claims show their full history."
+    approved_by: "Michael Wolfe, repro-lab maintainer"
+    date: 2026-09-27
+  - what: "Opus mapping table, attempt 2 (the last): revised prompt, committed before any call, asks for the single best Mondo term plus a confidence (high/medium/low), and no match only when nothing plausible exists. The gate and its definition are unchanged; confidence is recorded but used neither by the gate nor by the lookup. RS4-RS6 and EX4 are restored only if this attempt passes."
+    why: "Attempt 1 failed because of the abstention instruction, not the mapping procedure; one further attempt was authorised by the maintainer, with no third."
+    approved_by: "Michael Wolfe, repro-lab maintainer"
+    date: 2026-09-27
 
 harness:
   image: repro-lab/reese-2026-rescore
