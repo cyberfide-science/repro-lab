@@ -201,7 +201,10 @@ harness:
             "-v", "{repo_root}/work/reese-2026-exomiser:/work/wk",
             "-v", "{repo_root}/out/reese-2026-exomiser:/work/out",
             "repro-lab/reese-2026-exomiser"]
-      expected_minutes: <fill>
+      # 519 (387 s per 100 cases x 5212 x 1.5 / 60 + 15 min extraction) + 1.5 x 63.5 min, the minimal
+      # scoring of all 5212 cases measured in the pre-registered check
+      # (reports/reese-2026-exomiser/minimal_scoring_check.md, 40 of 40 rows agree).
+      expected_minutes: 615
 
 notes: >
   Expected: EX1–EX3 at the pre-registered tie order (score, then sha256 of the disease id) may miss by a
