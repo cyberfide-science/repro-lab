@@ -248,7 +248,7 @@ def cmd_query(a):
         sys.exit(f"[query] the CLI reported model(s) {wrong}, not {MODEL}; stopping")
     if failed:
         sys.exit(f"[query] chunk(s) {failed} failed all {MAX_ATTEMPTS} attempts; stopping")
-    print(f"[query] done; {label(a.grounding_dir)}/chunks.sha256 written", flush=True)
+    print(f"[query] done; {gdir_label(a.grounding_dir)}/chunks.sha256 written", flush=True)
 
 
 # ---------------------------------------------------------------- validate (container)
@@ -339,7 +339,7 @@ def cmd_validate(a):
                           {"value": None, "reason": "the CLI's JSON output reported no model id"},
         "claude_code_version": log["claude_code_version"],
         "auth": "Claude Code OAuth login (no API key)",
-        "argv": argv_for(f"<{label(a.grounding_dir)}/prompt.md>", f"<{label(a.grounding_dir)}/schema.json>")
+        "argv": argv_for(f"<{gdir_label(a.grounding_dir)}/prompt.md>", f"<{gdir_label(a.grounding_dir)}/schema.json>")
                 + ["(stdin: chunk names, one per line)"],
         "prompt_sha256": sha256_file(os.path.join(a.grounding_dir, "prompt.md")),
         "schema_sha256": sha256_file(os.path.join(a.grounding_dir, "schema.json")),
@@ -373,7 +373,7 @@ def cmd_validate(a):
           f"agreement_rate {rate} (gate {GATE}): {'PASSED' if meta['gate_passed'] else 'FAILED'}")
 
 
-def label(gdir):
+def gdir_label(gdir):
     rel = os.path.relpath(gdir, HERE).replace(os.sep, "/")
     return "grounding" if rel == "." else f"grounding/{rel}"
 
