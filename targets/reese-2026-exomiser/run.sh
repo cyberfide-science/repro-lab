@@ -41,8 +41,8 @@ print(f"== network check: unreachable ({', '.join(seen)})")
 PY
 
 # Outputs of an earlier run never survive into this one.
-rm -rf /work/exo/raw /work/exo/items /work/exo/raw_json.sha256
-mkdir -p /work/exo/raw /work/exo/items
+rm -rf /work/wk/raw /work/wk/items /work/wk/raw_json.sha256
+mkdir -p /work/wk/raw /work/wk/items
 
 echo "== cases"
 python /work/score_exomiser.py cases

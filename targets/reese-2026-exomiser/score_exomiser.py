@@ -12,8 +12,18 @@ Lives in repro-lab, not in any clone; edits nothing in the Exomiser or pheval.ll
            reduced to its disease items (items/case-<row>.tsv.gz: gene_index, gene_symbol, disease_id,
            score, in JSON order) and deleted, except rows 0001-0020, moved whole to the mounted raw/ as
            an audit sample.
-  score    build each case's differential from its item list and score it; also ground o1-preview under
-           the substituted condition for EX4. Writes /work/out/results.csv and per_case.tsv.
+  score    build each case's differential from its item list and score the minimal item set (below);
+           also ground o1-preview under the substituted condition for EX4. Writes /work/out/results.csv and
+           per_case.tsv (ranks above 10 written as >10).
+  verify   (build-time check, not part of run.sh) minimal against full scoring on 40 rows; writes a table.
+
+Minimal scoring. Items x_1..x_n in tie-rule order. Step A: score x_1, x_2, ... and stop at the first
+correct item (rank R) or after x_10. Step B: with g = the score of x_R, or of x_10 if none of the first ten is
+correct, score every other item scoring exactly g. This fixes [R <= k], [O <= k] and [P <= k] for
+k in {1, 3, 10} exactly as full scoring would: items scoring above g all precede x_R (or x_10) and were
+scored in Step A, and the whole tie group at g is scored. When no correct item scores g and none is in the
+first ten, every correct item scores below x_10, so every rank is above 10. Ranks above 10 are not
+computed, so MRR is truncated at 10 (exomiser_mrr_at10).
 
 Field selection (step 2), the same fields pheval_exomiser 0.4.13's
 post_process/post_process_results_format.py::extract_disease_results_from_json reads (pheval-exomiser is
@@ -26,8 +36,8 @@ Differential (steps 3-6): deduplicate by disease_id keeping the highest score; o
 then sha256(disease_id as UTF-8) ascending (the pre-registered tie rule); rank = 1-based position.
 ORPHA:n items are mapped to the Mondo term whose skos:exactMatch is ORDO:n (the pinned Mondo writes
 Orphanet's identifiers with the ORDO: prefix, expanded to http://www.orpha.net/ORDO/Orphanet_, the same
-IRI as ORPHA:n); unmapped items stay in place and score 0 (passed to malco as "N/A"). Every item is
-scored with malco's score(), i.e. score_grounded_result with a copy of the authors' caches;
+IRI as ORPHA:n); unmapped items stay in place and score 0. Each scored item is
+scored with malco's score_grounded_result (see the score section);
 is_correct = score > 0. A case with no item is "not found" and stays in the denominator.
 
 Tie band (evidence): with s* the highest Exomiser score among correct items, optimistic rank = 1 + items
@@ -39,13 +49,14 @@ from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import Pool
 
 CASES_TSV = "/work/cases.tsv"
-DATA, OUT, EXO = "/work/data", "/work/out", "/work/exo"
+DATA, OUT, EXO = "/work/data", "/work/out", "/work/wk"
 AUDIT, ITEMS, RAW_SHA = f"{EXO}/raw", f"{EXO}/items", f"{EXO}/raw_json.sha256"
 RAW = "/work/raw"  # container-local: Exomiser writes here; only audit rows are moved to the mounted AUDIT dir
 CASE_DIR, BATCH_DIR = "/work/cases", "/work/batches"
 CLI = "/work/exomiser-cli-14.0.1"
 OPTIONS = "/work/output-options.yml"
 BATCH_SIZE, JVMS, XMX, AUDIT_ROWS = 25, 4, "3g", 20
+SCORERS = int(os.environ.get("SCORERS", "12"))  # scoring processes, about 0.5 GiB each (one Mondo adapter): 12 fit in --memory 16g
 NA = [("N/A", "No grounding found")]
 
 
@@ -186,20 +197,33 @@ def cmd_analyse():
 
 
 # ---------------------------------------------------------------- score
-_annotator = None
+# Every correctness decision is malco's own score_grounded_result(prediction, gold, mondo, cache) > 0, called
+# directly in worker processes (one Mondo adapter each). The cache passed is malco's per-term OMIM-mapping
+# cache (gold-independent); a (prediction, gold) memo avoids repeating a pair. An unmapped ORPHA item and an
+# o1-preview "N/A" item are incorrect without a call: malco's score_grounded_result gives such an id 0.0
+# (it has no OMIM mapping and no descendants but itself).
+_mondo = _terms = None
+_pairs = {}
 
 
-def _init_worker():
-    global _annotator
+def _init_scorer():
+    global _mondo, _terms
+    from cachetools import LRUCache
     from oaklib import get_adapter
-    _annotator = get_adapter("sqlite:obo:mondo")
+    _mondo = get_adapter("sqlite:obo:mondo")
+    _terms = LRUCache(maxsize=2 ** 22)
+    _terms.hits = _terms.misses = 0
 
 
-def _ground(response):
-    from malco.process.cleaning import split_diagnosis_from_header
-    from malco.process.grounding import ground_diagnosis_text_to_mondo
-    return ground_diagnosis_text_to_mondo(_annotator, split_diagnosis_from_header(response),
-                                          verbose=False, use_ontogpt_grounding=False)
+def _correct(pred, gold, work):
+    if pred is None or pred == "N/A":
+        return False
+    k = (pred, gold)
+    if k not in _pairs:
+        from malco.process.mondo_score_utils import score_grounded_result
+        _pairs[k] = score_grounded_result(pred, gold, _mondo, _terms) > 0
+        work[0] += 1
+    return _pairs[k]
 
 
 def tie_key(item):
@@ -217,53 +241,9 @@ def differential(row):
     return sorted(best.items(), key=tie_key)
 
 
-def first_correct(scored):
-    for pos, item in enumerate(scored or [], start=1):
-        if item["is_correct"]:
-            return pos
-    return None
-
-
-def o1_subst(prompt_ids):
-    """o1-preview's first-correct rank per prompt id under the substituted condition, as reese-2026-rescore
-    computes it: OAK whole-line exact match, then the hash-verified Opus table for lines OAK cannot ground."""
-    import pandas as pd
-    from malco.process.scoring import score
-    result = [json.loads(l) for l in open("/work/run/gpt-01-preview.jsonl", encoding="utf-8") if l.strip()]
-    table = {r["name"]: r for r in csv.DictReader(open(f"{DATA}/opus-mondo-map.tsv", encoding="utf-8",
-                                                          newline=""), delimiter="\t", quoting=csv.QUOTE_NONE)}
-    with Pool(os.cpu_count(), initializer=_init_worker) as pool:
-        floor = pool.map(_ground, [r["response"] for r in result], chunksize=8)
-    subst, missing = [], set()
-    for g in floor:
-        s = []
-        for line, grounded in g:
-            if grounded == NA:
-                t = table.get(line)
-                if t is None:
-                    missing.add(line)
-                elif t["effective_mondo_id"] != "no match":
-                    grounded = [(t["effective_mondo_id"], t["opus_mondo_label"])]
-            s.append((line, grounded))
-        subst.append(s)
-    if missing:
-        sys.exit(f"[score] {len(missing)} o1-preview line(s) missing from the Opus table; stopping")
-    df = score(pd.DataFrame({"id": [r["id"] for r in result], "gold": [r["gold"] for r in result],
-                             "grounding": subst}))
-    ranks = dict(zip(df["id"], (first_correct(s) for s in df["scored"])))
-    if set(ranks) != set(prompt_ids):
-        sys.exit("[score] o1-preview ids differ from cases.tsv prompt ids; stopping")
-    return ranks
-
-
-def cmd_score():
+def load_ordo():
     import sqlite3
-    import pandas as pd
     from oaklib import get_adapter
-    from malco.process.scoring import score
-
-    cases = read_cases()
-    denominator = sum(1 for _ in open(f"{DATA}/correct_results.tsv", encoding="utf-8"))
     db = get_adapter("sqlite:obo:mondo").engine.url.database
     ordo = {}
     for subj, obj in sqlite3.connect(db).execute(
@@ -272,51 +252,161 @@ def cmd_score():
         ordo.setdefault(obj, set()).add(subj)
     if any(len(v) > 1 for v in ordo.values()):
         sys.exit("[score] an ORDO id has more than one Mondo exactMatch; the mapping rule does not cover it")
+    return {k: next(iter(v)) for k, v in ordo.items()}
 
-    diffs, groundings, unmapped = [], [], 0
+
+def predictions(d, ordo):
+    """The id malco scores for each differential item: the item itself, or, for ORPHA:n / Orphanet:n, the
+    Mondo term whose skos:exactMatch is ORDO:n (None when there is none)."""
+    out = []
+    for did, _ in d:
+        if did.startswith(("ORPHA:", "Orphanet:")):
+            out.append(ordo.get("ORDO:" + did.split(":", 1)[1]))
+        else:
+            out.append(did)
+    return out
+
+
+def ranks_from(d, ok, s_star):
+    """Optimistic and pessimistic ranks given the score s* of the best correct item; ok[i] is known for
+    every item scoring exactly s*."""
+    above = sum(1 for _, s in d if s > s_star)
+    wrong_at = sum(1 for i, (_, s) in enumerate(d) if s == s_star and not ok[i])
+    return above + 1, above + wrong_at + 1, wrong_at
+
+
+def minimal(args):
+    """Steps A and B for one case. Returns R (<= 10, else None), O and P (exact when a correct item at the
+    deciding score was found, else None: not in the top 10), the tie-group size at g, and the pairs scored."""
+    row, gold, d, preds = args
+    work, ok = [0], {}
+    R = None
+    for i in range(min(10, len(d))):                      # Step A
+        ok[i] = _correct(preds[i], gold, work)
+        if ok[i]:
+            R = i + 1
+            break
+    if R is None and len(d) <= 10:
+        return row, None, None, None, None, 0, work[0]
+    g = d[R - 1][1] if R else d[9][1]                    # Step B
+    group = [i for i, (_, s) in enumerate(d) if s == g]
+    for i in group:
+        if i not in ok:
+            ok[i] = _correct(preds[i], gold, work)
+    if not any(ok[i] for i in group):
+        return row, R, None, None, None, len(group), work[0]
+    O, P, wrong_at = ranks_from(d, ok, g)
+    return row, R, O, P, wrong_at, len(group), work[0]
+
+
+def _pair(pair):
+    """One (prediction, gold) pair through malco's score_grounded_result (verification only)."""
+    return pair, _correct(pair[0], pair[1], [0])
+
+
+def full(job, verdict):
+    """Every item of one case scored (verification only); verdict maps (prediction, gold) to correctness."""
+    row, gold, d, preds = job
+    ok = {i: (p is not None and verdict[(p, gold)]) for i, p in enumerate(preds)}
+    hits = [i for i in range(len(d)) if ok[i]]
+    if not hits:
+        return row, None, None, None
+    s_star = d[hits[0]][1]
+    O, P, _ = ranks_from(d, ok, s_star)
+    return row, hits[0] + 1, O, P
+
+
+def o1_first(args):
+    """o1-preview's first-correct position in its flattened item list (malco's rank), or None."""
+    items, gold = args
+    work = [0]
+    for pos, pred in enumerate(items, start=1):
+        if _correct(pred, gold, work):
+            return pos
+    return None
+
+
+def _ground(response):
+    global _mondo
+    if _mondo is None:
+        _init_scorer()
+    from malco.process.cleaning import split_diagnosis_from_header
+    from malco.process.grounding import ground_diagnosis_text_to_mondo
+    return ground_diagnosis_text_to_mondo(_mondo, split_diagnosis_from_header(response),
+                                          verbose=False, use_ontogpt_grounding=False)
+
+
+def o1_subst(cases):
+    """o1-preview's first-correct rank per prompt id under the substituted condition, as reese-2026-rescore
+    builds it: OAK whole-line exact match, then the hash-verified Opus table for lines OAK cannot ground."""
+    result = [json.loads(l) for l in open("/work/run/gpt-01-preview.jsonl", encoding="utf-8") if l.strip()]
+    table = {r["name"]: r for r in csv.DictReader(open(f"{DATA}/opus-mondo-map.tsv", encoding="utf-8",
+                                                          newline=""), delimiter="\t", quoting=csv.QUOTE_NONE)}
+    with Pool(SCORERS, initializer=_init_scorer) as pool:
+        floor = pool.map(_ground, [r["response"] for r in result], chunksize=8)
+        jobs, missing = [], set()
+        for r, g in zip(result, floor):
+            items = []
+            for line, grounded in g:
+                if grounded == NA:
+                    t = table.get(line)
+                    if t is None:
+                        missing.add(line)
+                    elif t["effective_mondo_id"] != "no match":
+                        grounded = [(t["effective_mondo_id"], t["opus_mondo_label"])]
+                items += [i for i, _ in grounded]
+            jobs.append((items, r["gold"]["disease_id"]))
+        if missing:
+            sys.exit(f"[score] {len(missing)} o1-preview line(s) missing from the Opus table; stopping")
+        ranks = dict(zip((r["id"] for r in result), pool.map(o1_first, jobs, chunksize=8)))
+    if set(ranks) != {c["prompt_id"] for c in cases}:
+        sys.exit("[score] o1-preview ids differ from cases.tsv prompt ids; stopping")
+    return ranks
+
+
+def score_jobs(cases, ordo):
+    jobs, max_tie, mapped, unmapped, no_result = [], 0, 0, 0, 0
     for c in cases:
         d = differential(c["row"])
-        diffs.append(d)
-        g = []
-        for did, _ in d:
-            if did.startswith(("ORPHA:", "Orphanet:")):
-                m = ordo.get("ORDO:" + did.split(":", 1)[1])
-                if m is None:
-                    unmapped += 1
-                    g.append((did, NA))
-                else:
-                    g.append((did, [(next(iter(m)), "")]))
-            else:
-                g.append((did, [(did, "")]))
-        groundings.append(g)
-    print(f"[score] {len(cases)} differentials, {sum(len(d) for d in diffs)} items; scoring with malco", flush=True)
-    df = score(pd.DataFrame({"id": [c["prompt_id"] for c in cases],
-                             "gold": [{"disease_id": c["gold_id"]} for c in cases],
-                             "grounding": groundings}))
-
-    per_case, pos, opt, pess, in_tie, max_tie, no_result = [], [], [], [], 0, 0, 0
-    for c, d, scored in zip(cases, diffs, df["scored"]):
-        correct = [it["is_correct"] for it in (scored or [])]
-        if len(correct) != len(d):
-            sys.exit(f"[score] row {c['row']}: {len(correct)} scored items for {len(d)} differential items")
+        preds = predictions(d, ordo)
+        orpha = [p for (did, _), p in zip(d, preds) if did.startswith(("ORPHA:", "Orphanet:"))]
+        mapped += sum(1 for p in orpha if p)
+        unmapped += sum(1 for p in orpha if not p)
         no_result += not d
         counts = {}
         for _, s in d:
             counts[s] = counts.get(s, 0) + 1
         max_tie = max([max_tie] + list(counts.values()))
-        p = first_correct(scored)
-        if p is None:
-            o = q = None
-        else:
-            s_star = max(s for (_, s), ok in zip(d, correct) if ok)
-            above = sum(1 for _, s in d if s > s_star)
-            wrong_at = sum(1 for (_, s), ok in zip(d, correct) if s == s_star and not ok)
-            o, q = above + 1, above + wrong_at + 1
-            in_tie += wrong_at > 0
-        pos.append(p), opt.append(o), pess.append(q)
-        per_case.append((c, p, o, q, d[0][0] if d else "", len(d)))
+        jobs.append((c["row"], c["gold_id"], d, preds))
+    return jobs, max_tie, mapped, unmapped, no_result
 
-    o1 = o1_subst([c["prompt_id"] for c in cases])
+
+def cap(x):
+    return ">10" if x is None or x > 10 else str(x)
+
+
+def cmd_score():
+    cases = read_cases()
+    denominator = sum(1 for _ in open(f"{DATA}/correct_results.tsv", encoding="utf-8"))
+    ordo = load_ordo()
+    t0 = time.time()
+    jobs, max_tie, mapped, unmapped, no_result = score_jobs(cases, ordo)
+    example = next(((did, p) for _, _, d, preds in jobs for (did, _), p in zip(d, preds)
+                    if did.startswith("ORPHA:") and p), None)
+    print(f"[score] {len(cases)} differentials, {sum(len(j[2]) for j in jobs)} items; ORPHA items mapped "
+          f"{mapped}, unmapped {unmapped}; example {example[0]} -> {example[1]}", flush=True)
+    order = sorted(range(len(jobs)), key=lambda i: (jobs[i][1], jobs[i][0]))  # group by gold for the caches
+    with Pool(SCORERS, initializer=_init_scorer) as pool:
+        got = {r[0]: r for r in pool.imap_unordered(minimal, [jobs[i] for i in order], chunksize=4)}
+    res = [got[c["row"]] for c in cases]
+    n_pairs = sum(r[6] for r in res)
+    print(f"[score] minimal scoring: {n_pairs} (item, gold) pairs in {(time.time() - t0) / 60:.1f} min", flush=True)
+    pos = [r[1] for r in res]
+    opt = [r[2] for r in res]
+    pess = [r[3] for r in res]
+    in_tie = sum(1 for r in res if r[4])
+
+    o1 = o1_subst(cases)
     o1_top1 = sum(1 for r in o1.values() if r == 1)
 
     def n(ranks, k):
@@ -331,8 +421,9 @@ def cmd_score():
              ("denominator_cases", denominator), ("scored_cases", len(cases))]
     for key, ranks in (("", pos), ("_opt", opt), ("_pess", pess)):
         rows += [(f"exomiser_n_top{k}{key}", n(ranks, k)) for k in (1, 3, 10)]
-    rows += [("exomiser_mrr", sum(1 / r for r in pos if r) / denominator),
-             ("exomiser_cases_no_result", no_result), ("exomiser_orpha_items_unmapped", unmapped),
+    rows += [("exomiser_mrr_at10", sum(1 / r for r in pos if r and r <= 10) / denominator),
+             ("exomiser_cases_no_result", no_result), ("exomiser_orpha_items_mapped", mapped),
+             ("exomiser_orpha_items_unmapped", unmapped), ("exomiser_n_scored_pairs", n_pairs),
              ("o1_subst_n_top1", o1_top1),
              ("exomiser_cases_correct_in_tie", in_tie), ("exomiser_max_tie_size", max_tie)]
     with open(f"{OUT}/results.csv", "w", newline="", encoding="utf-8") as f:
@@ -343,17 +434,60 @@ def cmd_score():
     with open(f"{OUT}/per_case.tsv", "w", newline="", encoding="utf-8") as f:
         f.write("row\tid\tgold_id\texomiser_first_correct_rank\texomiser_rank_opt\texomiser_rank_pess\t"
                 "exomiser_top_item\texomiser_n_items\to1_subst_first_correct_rank\n")
-        for c, p, o, q, top, ni in per_case:
-            f.write(f"{c['row']}\t{c['prompt_id']}\t{c['gold_id']}\t{p or ''}\t{o or ''}\t{q or ''}\t{top}\t{ni}\t"
-                    f"{o1[c['prompt_id']] or ''}\n")
+        for c, r, j in zip(cases, res, jobs):
+            d = j[2]
+            f.write(f"{c['row']}\t{c['prompt_id']}\t{c['gold_id']}\t{cap(r[1])}\t{cap(r[2])}\t{cap(r[3])}\t"
+                    f"{d[0][0] if d else ''}\t{len(d)}\t{o1[c['prompt_id']] or ''}\n")
     print(f"[score] Exomiser top1/3/10 {[n(pos, k) for k in (1, 3, 10)]} (opt {[n(opt, k) for k in (1, 3, 10)]}, "
           f"pess {[n(pess, k) for k in (1, 3, 10)]}); o1-preview subst top1 {o1_top1}; over {denominator}")
+
+
+def cmd_verify(out_path):
+    """Pre-registered check of minimal against full scoring: rows 0001-0020 plus the 20 other rows with the
+    largest tie group at g (ties by row number). R, O and P capped at 10 must agree on all 40 rows."""
+    cases = read_cases()
+    ordo = load_ordo()
+    t0 = time.time()
+    jobs, *_ = score_jobs(cases, ordo)
+    by_row = {j[0]: j for j in jobs}
+    with Pool(SCORERS, initializer=_init_scorer) as pool:
+        order = sorted(range(len(jobs)), key=lambda i: (jobs[i][1], jobs[i][0]))
+        mins = {r[0]: r for r in pool.imap_unordered(minimal, [jobs[i] for i in order], chunksize=4)}
+        t_min = time.time() - t0
+        audit = [c["row"] for c in cases[:AUDIT_ROWS]]
+        rest = sorted((r for r in mins if r not in audit), key=lambda r: (-(mins[r][5] or 0), r))[:20]
+        sample = audit + rest
+        # Full scoring: every distinct (prediction, gold) pair of the sample rows, spread over the workers
+        # (sorted by prediction, so a worker's term cache is reused), then each row's ranks from the verdicts.
+        pairs = sorted({(p, by_row[r][1]) for r in sample for p in by_row[r][3] if p is not None})
+        verdict = dict(pool.imap_unordered(_pair, pairs, chunksize=64))
+    fulls = {r: full(by_row[r], verdict) for r in sample}
+    lines, agree = [], 0
+    lines.append("| row | set | tie group at g | minimal R / O / P | full R / O / P | agree |")
+    lines.append("|---|---|---|---|---|---|")
+    for r in sample:
+        m, f = mins[r], fulls[r]
+        a = (cap(m[1]), cap(m[2]), cap(m[3])) == (cap(f[1]), cap(f[2]), cap(f[3]))
+        agree += a
+        lines.append(f"| {r} | {'audit' if r in audit else 'largest tie'} | {m[5] if m[5] is not None else '-'} | "
+                     f"{cap(m[1])} / {cap(m[2])} / {cap(m[3])} | {cap(f[1])} / {cap(f[2])} / {cap(f[3])} | "
+                     f"{'yes' if a else 'NO'} |")
+    summary = (f"minimal scoring of all {len(jobs)} cases: {sum(m[6] for m in mins.values())} (item, gold) pairs "
+               f"in {t_min / 60:.1f} min on {SCORERS} processes; full scoring of the {len(sample)} sample "
+               f"rows: {len(pairs)} distinct pairs; agreement {agree} of {len(sample)}")
+    with open(out_path, "w", encoding="utf-8", newline="\n") as fo:
+        fo.write(summary + "\n\n" + "\n".join(lines) + "\n")
+    print("[verify] " + summary, flush=True)
+    if agree != len(sample):
+        sys.exit("[verify] minimal and full scoring disagree; stopping")
 
 
 if __name__ == "__main__":
     cmds = {"cases": cmd_cases, "analyse": cmd_analyse, "score": cmd_score}
     if len(sys.argv) == 3 and sys.argv[1] == "reduce":
         cmd_reduce(int(sys.argv[2]))
+    elif len(sys.argv) == 3 and sys.argv[1] == "verify":
+        cmd_verify(sys.argv[2])
     elif len(sys.argv) == 2 and sys.argv[1] in cmds:
         cmds[sys.argv[1]]()
     else:
