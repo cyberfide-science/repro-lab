@@ -277,7 +277,8 @@ def cmd_validate(a):
         problem = None if obj is None else schema_check(obj, chunk_names(names, k))
         if obj is None or problem:
             sys.exit(f"[validate] accepted output {acc} does not pass the acceptance rule: {problem}")
-        rows.extend(obj["rows"])
+        # The table keeps the INPUT name byte-for-byte, never the echo (they can differ under NFC).
+        rows.extend(dict(r, name=n) for n, r in zip(chunk_names(names, k), obj["rows"]))
 
     mondo = get_adapter("sqlite:obo:mondo")
     table, n_valid, n_oak, n_agree = [], 0, 0, 0

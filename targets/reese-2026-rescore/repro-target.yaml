@@ -78,7 +78,7 @@ data:
     # Built once by grounding/build_opus_map.py with claude-opus-5-5 on 2026-09-27 (chunks 2026-09-27T19:38:49Z to 23:18:56Z); see
     # grounding/opus-mondo-map.meta.json (Claude Code version, OAuth, prompt sha256, chunks, tokens,
     # agreement_rate, gate 0.90).
-    sha256: daec41c1749e436f9ccc6c3c224a3c4a46fbca46a42268049a046e33517bf05e
+    sha256: c71db9ada79ab2cf34d1e0bbf58799ecf5e2a8ed7e907ea8e6d2dc53d3320065
     size_bytes: 406597
 
 claims:
