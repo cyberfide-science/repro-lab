@@ -73,12 +73,13 @@ data:
     sha256: e7980547e48b89e61cf0a4b35fb8f5c8660f0dca33232b255fddf8e53482556f
     size_bytes: 474639
   - id: mondo_semsql
-    uri: file://data/manual/mondo-semsql-2026-09-27/mondo.db.gz
+    uri: https://github.com/cyberfide-science/repro-lab/releases/download/data-mondo-semsql-2026-09-27/mondo.db.gz
     path: data/reese-2026/mondo.db.gz
     # Copy of https://semanticsql.berkeleybop.io/mondo.db.gz fetched 2026-09-27T18:04:29Z (Last-Modified
     # 2026-09-26T23:58:50Z); owl:versionIRI obo:mondo/releases/2026-09-01/mondo.owl. Mondo CC BY 4.0.
-    # PENDING: the mirror release data-mondo-semsql-2026-09-27 on cyberfide-science/repro-lab. Until it is
-    # published, uri is a local file:// copy; the swap to the release URL changes only this uri line.
+    # Published: the mirror release data-mondo-semsql-2026-09-27 on cyberfide-science/repro-lab
+    # (published 2026-09-29). sha256 and size_bytes are unchanged from the run that produced this
+    # directory's committed report.
     sha256: 499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0
     size_bytes: 242815274
   - id: opus_mondo_map
