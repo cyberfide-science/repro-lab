@@ -177,10 +177,17 @@ The full `mondo_semsql` entry of `work/reese-2026-rescore/provenance.json`, incl
 ```
 
 ```
-$ diff <(grep -A3 'id: mondo_semsql' targets/reese-2026-rescore/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:') \
-       <(grep -A3 'id: mondo_semsql' targets/reese-2026-exomiser/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:')
+$ grep -A9 'id: mondo_semsql' targets/reese-2026-exomiser/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:'
+    uri: https://github.com/cyberfide-science/repro-lab/releases/download/data-mondo-semsql-2026-09-27/mondo.db.gz
+    sha256: 499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0
+    size_bytes: 242815274
+$ diff <(grep -A9 'id: mondo_semsql' targets/reese-2026-rescore/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:') \
+       <(grep -A9 'id: mondo_semsql' targets/reese-2026-exomiser/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:')
 $ echo $?  ->  0
 ```
+
+(Corrected 2026-09-29 after round-3 review: the first version of this command used `-A3`, which reaches only
+the `uri:` line; `-A9` reaches all three. The rerun above shows all three lines match.)
 
 The diff of the `uri`/`sha256`/`size_bytes` lines of this manifest's `mondo_semsql` entry against the
 rescore manifest's is empty, so the one verified download stands for both. The scratch clone was deleted
