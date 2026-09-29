@@ -123,3 +123,41 @@ equals the host log's end time. There was no choice between differing results: t
 A separate, pre-harness analysis run in `work/reese-2026-smoke` (outside the harness, no report) failed
 while reducing batch 190 and was resumed for batches 190-208 with `--memory 20g`. It produced the 40-row
 verification sample behind `minimal_scoring_check.md` and no claim value.
+
+## Post-run mirror URI check
+
+Date: 2026-09-29 (UTC). A local clone of the commit that changed `mondo_semsql`'s uri to the published
+mirror release, with no `data/` present:
+
+```
+$ git clone <orig> <fresh_clone> && cd <repro-lab in the clone>
+$ ls data work 2>&1
+ls: cannot access 'data': No such file or directory
+ls: cannot access 'work': No such file or directory
+```
+
+Re-running `fetch_verify` for `reese-2026-exomiser` would re-download its 19.3 GB and 6.2 GB Exomiser data
+files for no reason: the `mondo_semsql` entry is checked textually instead, against the rescore target's
+verified download in the same clone (`py -3 harness/fetch_verify.py reese-2026-rescore`, run and recorded
+in `reports/reese-2026-rescore/fresh_clone.md`):
+
+```
+[fetch_verify] mondo_semsql: 242815274 bytes, sha256 OK
+```
+
+The `mondo_semsql` line of `work/reese-2026-rescore/provenance.json`:
+
+```json
+{
+  "id": "mondo_semsql",
+  "uri": "https://github.com/cyberfide-science/repro-lab/releases/download/data-mondo-semsql-2026-09-27/mondo.db.gz",
+  "dest": "data/reese-2026/mondo.db.gz",
+  "sha256_expected": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
+  "sha256_actual": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
+  "bytes": 242815274,
+  "verified": true
+}
+```
+
+`diff` of the `uri`/`sha256`/`size_bytes` lines of this manifest's `mondo_semsql` entry against the rescore
+manifest's is empty, so the one verified download stands for both.

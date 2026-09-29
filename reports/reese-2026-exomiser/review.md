@@ -90,4 +90,14 @@ EX3 0.5691540379819682 to 0.5896796470362555. The full wording is in `fresh_clon
   matches the ASCII naming pattern the scored run relies on, and one cross-target provenance equality
   check. Left as an open verification item for a future round; neither affects a claim in this report.
 
+## Post-run address change
+
+Commit `b92f1e3` changed the manifest's `mondo_semsql` uri from the local placeholder
+`file://data/manual/mondo-semsql-2026-09-27/mondo.db.gz` to the published mirror release asset,
+`https://github.com/cyberfide-science/repro-lab/releases/download/data-mondo-semsql-2026-09-27/mondo.db.gz`.
+`sha256` (`499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0`) and `size_bytes`
+(`242815274`) are unchanged, so the data behind the committed run is identical; the committed `report.json`
+keeps the `file://` uri, because that is where the bytes came from in the run it records. No report was
+regenerated.
+
 APPROVED

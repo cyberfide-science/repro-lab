@@ -81,3 +81,38 @@ This condition can only lower the count, so these are a lower bound for this pip
 paper's numbers. The paper-level verdict counts these three claims, so it is `not_reproduced`, as the
 manifest's notes said before the run. The substituted-grounding claims were removed before any run
 because both Claude Opus 5.5 mapping tables failed their pre-registered gate.
+
+## Post-run mirror URI check
+
+Date: 2026-09-29 (UTC). A local clone of the commit that changed `mondo_semsql`'s uri to the published
+mirror release, with no `data/` present:
+
+```
+$ git clone <orig> <fresh_clone> && cd <repro-lab in the clone>
+$ ls data work 2>&1
+ls: cannot access 'data': No such file or directory
+ls: cannot access 'work': No such file or directory
+$ py -3 harness/fetch_verify.py reese-2026-rescore
+[fetch_verify] responses_zip: 9406802 bytes, sha256 OK
+[fetch_verify] gold_tsv: 474639 bytes, sha256 OK
+[fetch_verify] mondo_semsql: 242815274 bytes, sha256 OK
+[fetch_verify] opus_mondo_map: 406599 bytes, sha256 OK
+```
+
+The `mondo_semsql` line of `work/reese-2026-rescore/provenance.json`:
+
+```json
+{
+  "id": "mondo_semsql",
+  "uri": "https://github.com/cyberfide-science/repro-lab/releases/download/data-mondo-semsql-2026-09-27/mondo.db.gz",
+  "dest": "data/reese-2026/mondo.db.gz",
+  "sha256_expected": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
+  "sha256_actual": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
+  "bytes": 242815274,
+  "verified": true
+}
+```
+
+The Exomiser manifest's `mondo_semsql` entry was checked textually rather than re-fetched (its 19.3 GB and
+6.2 GB siblings make a second full download pointless): `diff` of the `uri`/`sha256`/`size_bytes` lines of
+both manifests' `mondo_semsql` entries is empty, so one verified download stands for both.

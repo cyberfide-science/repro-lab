@@ -70,4 +70,14 @@ against 31.2% at top-3, and 0.2973335891041627 against 36.8% at top-10; this con
 count. The paper-level verdict counts these three claims, so it is `not_reproduced`, as the manifest's
 `notes:` said before the run.
 
+## Post-run address change
+
+Commit `b92f1e3` changed the manifest's `mondo_semsql` uri from the local placeholder
+`file://data/manual/mondo-semsql-2026-09-27/mondo.db.gz` to the published mirror release asset,
+`https://github.com/cyberfide-science/repro-lab/releases/download/data-mondo-semsql-2026-09-27/mondo.db.gz`.
+`sha256` (`499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0`) and `size_bytes`
+(`242815274`) are unchanged, so the data behind the committed run is identical; the committed `report.json`
+keeps the `file://` uri, because that is where the bytes came from in the run it records. No report was
+regenerated.
+
 APPROVED
