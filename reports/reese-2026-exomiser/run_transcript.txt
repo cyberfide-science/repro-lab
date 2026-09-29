@@ -1,0 +1,34 @@
+# Terminal transcript of the run that produced report.json and report.md in this directory (Git Bash on Windows, Docker Desktop). The only edit is that the absolute path of the repository root has been replaced by <repo_root> in the three -v arguments; everything else, including the log's timestamp prefixes, is as printed. HARNESS_APPROVE=1 answered the two download-size checkpoints (exomiser_2406_phenotype, exomiser_2406_hg19) and the stage-duration checkpoint, under the maintainer's written pre-approval of 2026-09-27. The three out-of-tolerance [checkpoint] lines are human-review flags; no outreach follows from them.
+
+start=2026-09-28T21:20:53Z
+commit=dce29259041eb268ca9d43c1d32d8f85d1ec9964
+cmd=HARNESS_APPROVE=1 py -3 -u run_all.py reese-2026-exomiser
+2026-09-28T21:20:56Z [build_env] docker build -t repro-lab/reese-2026-exomiser targets/reese-2026-exomiser
+2026-09-28T21:20:56Z [build_env] image repro-lab/reese-2026-exomiser id sha256:0950f1af3c499ad99a129bbc392f8e348045d75a8354e6e39bbbaf12d7d93bcf
+2026-09-28T21:20:56Z [build_env] base eclipse-temurin@sha256:34d6aaf0fa4ef553c470234ec23c32c7d5c0f370c2bd4b0bf8a16838052d85f0; container python 3.12.14
+2026-09-28T21:20:56Z [build_env] 0 difference(s) vs targets/reese-2026-exomiser/env-resolved.txt
+2026-09-28T21:36:50Z [fetch_verify] exomiser_cli_14_0_1: 75878122 bytes, sha256 OK
+2026-09-28T21:36:50Z [checkpoint] data 'exomiser_2406_phenotype' is 6.236618638 GB (> 5 GB limit). -- approved via HARNESS_APPROVE=1
+2026-09-28T21:36:50Z [fetch_verify] exomiser_2406_phenotype: 6236618638 bytes, sha256 OK
+2026-09-28T21:36:50Z [checkpoint] data 'exomiser_2406_hg19' is 19.329398823 GB (> 5 GB limit). -- approved via HARNESS_APPROVE=1
+2026-09-28T21:36:50Z [fetch_verify] exomiser_2406_hg19: 19329398823 bytes, sha256 OK
+2026-09-28T21:36:50Z [fetch_verify] phenopackets_tgz: 3412803 bytes, sha256 OK
+2026-09-28T21:36:50Z [fetch_verify] gold_tsv: 474639 bytes, sha256 OK
+2026-09-28T21:36:50Z [fetch_verify] responses_zip: 9406802 bytes, sha256 OK
+2026-09-28T21:36:50Z [fetch_verify] mondo_semsql: 242815274 bytes, sha256 OK
+2026-09-28T21:36:50Z [fetch_verify] opus_mondo_map: 406599 bytes, sha256 OK
+2026-09-29T02:25:49Z [checkpoint] stage 'container_run' expected 615 min (> 30 min limit). -- approved via HARNESS_APPROVE=1
+2026-09-29T02:25:49Z [run_pipeline] stage container_run: docker run --rm --network none --memory 16g -v <repo_root>/data/reese-2026:/work/data:ro -v <repo_root>/work/reese-2026-exomiser:/work/wk -v <repo_root>/out/reese-2026-exomiser:/work/out repro-lab/reese-2026-exomiser
+2026-09-29T02:25:49Z [run_pipeline]   exit 0 in 17339.4 s; log at work/reese-2026-exomiser/logs/container_run.log
+2026-09-29T02:25:49Z [run_pipeline] code_sha from the run's own output: 7a4dc1e06bf489f7815a873ef6c34a83c3b2e99b
+2026-09-29T02:25:49Z [run_pipeline] extracted 29 metrics -> work/reese-2026-exomiser/results.json
+2026-09-29T02:25:50Z [diff_claims] 0/3 claims within tolerance -> verdict: not_reproduced
+2026-09-29T02:25:50Z [checkpoint] EX1 (EX1_exomiser_top1_frac): claimed 0.355, obtained 0.35449836946096297 [absolute 0.0005] -- needs human review before any outreach
+2026-09-29T02:25:50Z [checkpoint] EX2 (EX2_exomiser_top3_frac): claimed 0.463, obtained 0.46019566468444273 [absolute 0.0005] -- needs human review before any outreach
+2026-09-29T02:25:50Z [checkpoint] EX3 (EX3_exomiser_top10_frac): claimed 0.585, obtained 0.5697295223479762 [absolute 0.0005] -- needs human review before any outreach
+2026-09-29T02:25:50Z [diff_claims] report.json validated against harness/schema/report.schema.json
+2026-09-29T02:25:50Z [diff_claims] wrote reports/reese-2026-exomiser/report.json
+2026-09-29T02:25:50Z [render_report] wrote reports/reese-2026-exomiser/report.md
+2026-09-29T02:25:50Z [run_all] done: reports/reese-2026-exomiser/report.json, reports/reese-2026-exomiser/report.md
+exit=0
+end=2026-09-29T02:25:50Z
