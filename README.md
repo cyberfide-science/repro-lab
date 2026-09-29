@@ -79,9 +79,9 @@ rendered from it. How the harness works: `harness/README.md`.
 
 reese-2026-rescore scores the deposited o1-preview answers under offline-only grounding (substituted
 grounding was dropped after both Claude Opus 5.5 mapping-table attempts failed their pre-registered
-agreement gate); reese-2026-exomiser's report gives a pessimistic-to-optimistic range alongside its point
-values, because the reruns's tied Exomiser scores are ordered non-deterministically and the paper does not
-state a tie rule. The one-time grounding step's provenance (which model, gate result, token counts) is in
+agreement gate); reese-2026-exomiser's report directory's fresh_clone.md gives the pessimistic-to-optimistic
+tie range from results.csv, because the reruns' tied Exomiser scores are ordered non-deterministically and
+the paper does not state a tie rule. The one-time grounding step's provenance (which model, gate result, token counts) is in
 `targets/reese-2026-rescore/grounding/opus-mondo-map.meta.json` and
 `targets/reese-2026-rescore/grounding/attempt-2/opus-mondo-map.meta.json`. `fetch_verify` hashes its inputs
 in 1 MiB chunks, so the multi-gigabyte Exomiser data files are never read into memory whole.

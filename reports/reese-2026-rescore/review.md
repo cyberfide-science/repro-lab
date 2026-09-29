@@ -2,9 +2,8 @@
 
 Provenance: independent adversarial review, round 1, by a reviewer agent that built nothing it reviews, run
 on 2026-09-29 against base-repo commit `71ec8e5`. Brief applied: `harness/prompts/reviewer.md`, rule by
-rule. The reviewer had no write access and edited nothing. The full round-1 text, covering both targets, is
-`unitR1/docs/reviews/r1-review-1.md` in the base repository, filed there verbatim as the precedent
-`unit2/docs/reviews/` does.
+rule. The reviewer had no write access and edited nothing. This file is self-contained: the findings and
+notes below are the full round-1 review text for this target.
 
 M = `targets/reese-2026-rescore/repro-target.yaml`, W = `work/reese-2026-rescore/`,
 R = `reports/reese-2026-rescore/report.json`, O = `out/reese-2026-rescore/`.
@@ -19,20 +18,20 @@ R = `reports/reese-2026-rescore/report.json`, O = `out/reese-2026-rescore/`.
 | 4 | PASS | RS1-RS3 are `not_reproduced` with cause `undiagnosed`, and the word is printed in the human-review section. |
 | 5 | vacuous | Every extraction is `manual`. |
 | 6 | PASS | `container_run.log` shows, in order: git HEAD, python version, Mondo version, jsonl line count, network check (unreachable), the scoring step with 32 workers, the results, and an empty `git status` inside the clone. Offline-only grounding is one deviation; the substituted-grounding keys back no claim; the cache-unreadability finding is in `environment.notes` and `notes`. Five deviation entries, each with `approved_by` "Michael Wolfe, repro-lab maintainer", dated 2026-09-27. |
-| 7 | PASS | The Opus mapping table's prompt, schema and gate are committed before the first call of each attempt; the claims, tolerances, tie rule and case list are committed before the scored run; the manifest's last commit precedes the run's `results.json` and `generated_at`. |
+| 7 | PASS | The Opus mapping table's prompt, schema and gate are committed before the first call of each attempt; the claims, tolerances, tie rule and case list are committed before the scored run; the manifest's last commit before the run precedes the run's `results.json` and `generated_at`. The manifest's HEAD commit is a later, permitted `mondo_semsql` address edit (see Round 2, below), not a rule-7 finding. |
 | 8 | PASS | 0 of 3 claims within tolerance -> `not_reproduced`. |
 | Tone | PASS | Only the renderer's permitted discrepancy form is used; no statement characterises the authors' work. |
 | Regeneration | PASS | A fresh clone at the commit that carries this report exits 0; the masked `report.md` and normalised `report.json` diffs are empty, and `out/` is byte-identical. |
 
 ## Findings relevant to this report
 
-- **The `mondo_semsql` data entry pointed at a gitignored local file** (`file://data/manual/...`) because
-  the mirror release was still pending when the manifest was committed. **Resolved by this commit's
-  successor**: the uri now points at the published mirror release asset; `sha256` and `size_bytes` are
-  unchanged. See "Post-run address change" below once that commit exists.
-- **This `review.md` file did not exist.** Resolved by this commit.
-- **`README.md` carried no report row for this target.** Resolved in the preceding documentation commit,
-  which added the Reports-table row and a pointer to the grounding step's provenance files.
+- **F5: the `mondo_semsql` data entry pointed at a gitignored local file** (`file://data/manual/...`)
+  because the mirror release was still pending when the manifest was committed. **Resolved in `b92f1e3`**:
+  the uri now points at the published mirror release asset; `sha256` and `size_bytes` are unchanged. See
+  "Post-run address change" below.
+- **F6: this `review.md` file did not exist.** Resolved in `719cb96`.
+- **F7: `README.md` carried no report row for this target.** Resolved in `ef97667`, which added the
+  Reports-table row and a pointer to the grounding step's provenance files.
 
 ## Notes
 
@@ -55,9 +54,11 @@ R = `reports/reese-2026-rescore/report.json`, O = `out/reese-2026-rescore/`.
 - **N6.** A hygiene grep pattern aimed at spec references also matched the word "batches" in this target's
   own batching text (host facts, manifest, scorer script), because the pattern predates the batching design.
   The spec's grep pattern is corrected in the current spec revision; no manifest or report change follows.
-- **N10.** Evidence paths in the report point into the gitignored `work/` directory, as in unit 2's reports,
-  and "None: every pinned component matched" is broader than what `env_actual.json` shows on its own.
-  Carried forward unchanged, as in unit 2's equivalent note; not a result-affecting finding.
+- **N7.** `harness/README.md` was not edited; only `harness/fetch_verify.py` may change under `harness/`,
+  so the chunked-hash note went to the repository README instead.
+- **N10.** Evidence paths in the report point into the gitignored `work/` directory, and "None: every
+  pinned component matched" is broader than what `env_actual.json` shows on its own. Carried forward
+  unchanged; not a result-affecting finding.
 - **N11.** This report's fresh clone was made from the local repository path, not the public mirror. The
   tree-identity check against the public mirror follows the subtree push, which is outside this pass; not
   yet performed.
@@ -79,5 +80,27 @@ Commit `b92f1e3` changed the manifest's `mondo_semsql` uri from the local placeh
 (`242815274`) are unchanged, so the data behind the committed run is identical; the committed `report.json`
 keeps the `file://` uri, because that is where the bytes came from in the run it records. No report was
 regenerated.
+
+## Round 2
+
+Independent adversarial review, round 2, by a fresh reviewer agent that built nothing it reviews and did
+not write round 1, run on 2026-09-29. Rule 7 is re-read under the `mondo_semsql` address-change rule: taking
+the last commit before the run (`c99a31d`), `git diff c99a31d HEAD -- targets/reese-2026-rescore/repro-target.yaml`
+gives:
+
+```
+@@ -73,12 +73,13 @@
+-    uri: file://data/manual/mondo-semsql-2026-09-27/mondo.db.gz
++    uri: https://github.com/cyberfide-science/repro-lab/releases/download/data-mondo-semsql-2026-09-27/mondo.db.gz
+-    # PENDING: the mirror release data-mondo-semsql-2026-09-27 on cyberfide-science/repro-lab. Until it is
+-    # published, uri is a local file:// copy; the swap to the release URL changes only this uri line.
++    # Published: the mirror release data-mondo-semsql-2026-09-27 on cyberfide-science/repro-lab
++    # (published 2026-09-29). sha256 and size_bytes are unchanged from the run that produced this
++    # directory's committed report.
+```
+
+The only changed lines are the `mondo_semsql` `uri:` line and its adjacent comment; `sha256` and
+`size_bytes` are untouched, so this commit is not a rule-7 finding. Rules 1-8 pass at this tree; this
+target's remaining findings are documentation fixes in this directory.
 
 APPROVED

@@ -7,61 +7,70 @@ pre-approval of the Exomiser run and its fresh-clone rerun (it answers the two d
 was `71ec8e5`, the commit that carries the report in this directory. One input was placed by hand before
 the run: the pinned Mondo SemSQL file, at the manifest's
 `file://data/manual/mondo-semsql-2026-09-27/mondo.db.gz`, because its mirror release was still pending at
-clone time; `fetch_verify` then copied it and verified its sha256 like every other input. Absolute host
-paths in the transcript are replaced by `<fresh_clone>` and `<orig>`.
+clone time; `fetch_verify` then copied it and verified its sha256 like every other input. Below is the
+logging script's own log, verbatim, with timestamps kept and line order unchanged; absolute host paths are
+replaced by `<clone>/` (the fresh clone) or `<repo>/` (this repository).
 
 ```
-$ git clone <orig> fresh && cd <repro-lab in the clone>
-$ git rev-parse --short HEAD  ->  71ec8e5
-$ ls data work 2>&1
-ls: cannot access 'data': No such file or directory
-ls: cannot access 'work': No such file or directory
-$ mkdir -p data/manual/mondo-semsql-2026-09-27 && cp <orig>/data/manual/mondo-semsql-2026-09-27/mondo.db.gz data/manual/mondo-semsql-2026-09-27/
-$ sha256sum data/manual/mondo-semsql-2026-09-27/mondo.db.gz
-499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0 *data/manual/mondo-semsql-2026-09-27/mondo.db.gz
-$ HARNESS_APPROVE=1 py -3 run_all.py reese-2026-exomiser
-[build_env] docker build -t repro-lab/reese-2026-exomiser targets/reese-2026-exomiser
-[build_env] image repro-lab/reese-2026-exomiser id sha256:0950f1af3c499ad99a129bbc392f8e348045d75a8354e6e39bbbaf12d7d93bcf
-[build_env] base eclipse-temurin@sha256:34d6aaf0fa4ef553c470234ec23c32c7d5c0f370c2bd4b0bf8a16838052d85f0; container python 3.12.14
-[build_env] 0 difference(s) vs targets/reese-2026-exomiser/env-resolved.txt
-[fetch_verify] exomiser_cli_14_0_1: 75878122 bytes, sha256 OK
-[checkpoint] data 'exomiser_2406_phenotype' is 6.236618638 GB (> 5 GB limit). -- approved via HARNESS_APPROVE=1
-[fetch_verify] exomiser_2406_phenotype: 6236618638 bytes, sha256 OK
-[checkpoint] data 'exomiser_2406_hg19' is 19.329398823 GB (> 5 GB limit). -- approved via HARNESS_APPROVE=1
-[fetch_verify] exomiser_2406_hg19: 19329398823 bytes, sha256 OK
-[fetch_verify] phenopackets_tgz: 3412803 bytes, sha256 OK
-[fetch_verify] gold_tsv: 474639 bytes, sha256 OK
-[fetch_verify] responses_zip: 9406802 bytes, sha256 OK
-[fetch_verify] mondo_semsql: 242815274 bytes, sha256 OK
-[fetch_verify] opus_mondo_map: 406599 bytes, sha256 OK
-[checkpoint] stage 'container_run' expected 615 min (> 30 min limit). -- approved via HARNESS_APPROVE=1
-[run_pipeline] stage container_run: docker run --rm --network none --memory 16g -v <fresh_clone>/data/reese-2026:/work/data:ro -v <fresh_clone>/work/reese-2026-exomiser:/work/wk -v <fresh_clone>/out/reese-2026-exomiser:/work/out repro-lab/reese-2026-exomiser
-[run_pipeline]   exit 0 in 16625.75 s; log at work/reese-2026-exomiser/logs/container_run.log
-[run_pipeline] code_sha from the run's own output: 7a4dc1e06bf489f7815a873ef6c34a83c3b2e99b
-[run_pipeline] extracted 29 metrics -> work/reese-2026-exomiser/results.json
-[diff_claims] 0/3 claims within tolerance -> verdict: not_reproduced
-[checkpoint] EX1 (EX1_exomiser_top1_frac): claimed 0.355, obtained 0.35449836946096297 [absolute 0.0005] -- needs human review before any outreach
-[checkpoint] EX2 (EX2_exomiser_top3_frac): claimed 0.463, obtained 0.46019566468444273 [absolute 0.0005] -- needs human review before any outreach
-[checkpoint] EX3 (EX3_exomiser_top10_frac): claimed 0.585, obtained 0.5697295223479762 [absolute 0.0005] -- needs human review before any outreach
-[diff_claims] report.json validated against harness/schema/report.schema.json
-[diff_claims] wrote reports/reese-2026-exomiser/report.json
-[render_report] wrote reports/reese-2026-exomiser/report.md
-[run_all] done: reports/reese-2026-exomiser/report.json, reports/reese-2026-exomiser/report.md
-$ echo $?  ->  0
+start=2026-09-29T11:26:02Z
+clone_dir=<clone>
+cmd=HARNESS_APPROVE=1 py -3 -u run_all.py reese-2026-exomiser
+2026-09-29T11:26:02Z [clone] git clone <repo> <clone>
+2026-09-29T11:26:02Z Cloning into '<clone>'...
+2026-09-29T11:26:03Z done.
+2026-09-29T11:26:04Z [clone] HEAD=71ec8e5
+2026-09-29T11:26:04Z [clone] ls data work: ls: cannot access 'data': No such file or directory ls: cannot access 'work': No such file or directory 
+2026-09-29T11:26:04Z [clone] copied mondo.db.gz, sha256: 499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0 *data/manual/mondo-semsql-2026-09-27/mondo.db.gz
+2026-09-29T11:26:08Z [build_env] docker build -t repro-lab/reese-2026-exomiser targets/reese-2026-exomiser
+2026-09-29T11:26:08Z [build_env] image repro-lab/reese-2026-exomiser id sha256:0950f1af3c499ad99a129bbc392f8e348045d75a8354e6e39bbbaf12d7d93bcf
+2026-09-29T11:26:08Z [build_env] base eclipse-temurin@sha256:34d6aaf0fa4ef553c470234ec23c32c7d5c0f370c2bd4b0bf8a16838052d85f0; container python 3.12.14
+2026-09-29T11:26:08Z [build_env] 0 difference(s) vs targets/reese-2026-exomiser/env-resolved.txt
+2026-09-29T11:42:13Z [fetch_verify] exomiser_cli_14_0_1: 75878122 bytes, sha256 OK
+2026-09-29T11:42:13Z [checkpoint] data 'exomiser_2406_phenotype' is 6.236618638 GB (> 5 GB limit). -- approved via HARNESS_APPROVE=1
+2026-09-29T11:42:13Z [fetch_verify] exomiser_2406_phenotype: 6236618638 bytes, sha256 OK
+2026-09-29T11:42:14Z [checkpoint] data 'exomiser_2406_hg19' is 19.329398823 GB (> 5 GB limit). -- approved via HARNESS_APPROVE=1
+2026-09-29T11:42:14Z [fetch_verify] exomiser_2406_hg19: 19329398823 bytes, sha256 OK
+2026-09-29T11:42:14Z [fetch_verify] phenopackets_tgz: 3412803 bytes, sha256 OK
+2026-09-29T11:42:14Z [fetch_verify] gold_tsv: 474639 bytes, sha256 OK
+2026-09-29T11:42:14Z [fetch_verify] responses_zip: 9406802 bytes, sha256 OK
+2026-09-29T11:42:14Z [fetch_verify] mondo_semsql: 242815274 bytes, sha256 OK
+2026-09-29T11:42:14Z [fetch_verify] opus_mondo_map: 406599 bytes, sha256 OK
+2026-09-29T16:19:18Z [checkpoint] stage 'container_run' expected 615 min (> 30 min limit). -- approved via HARNESS_APPROVE=1
+2026-09-29T16:19:18Z [run_pipeline] stage container_run: docker run --rm --network none --memory 16g -v <clone>/data/reese-2026:/work/data:ro -v <clone>/work/reese-2026-exomiser:/work/wk -v <clone>/out/reese-2026-exomiser:/work/out repro-lab/reese-2026-exomiser
+2026-09-29T16:19:18Z [run_pipeline]   exit 0 in 16625.75 s; log at work/reese-2026-exomiser/logs/container_run.log
+2026-09-29T16:19:18Z [run_pipeline] code_sha from the run's own output: 7a4dc1e06bf489f7815a873ef6c34a83c3b2e99b
+2026-09-29T16:19:18Z [run_pipeline] extracted 29 metrics -> work/reese-2026-exomiser/results.json
+2026-09-29T16:19:19Z [diff_claims] 0/3 claims within tolerance -> verdict: not_reproduced
+2026-09-29T16:19:19Z [checkpoint] EX1 (EX1_exomiser_top1_frac): claimed 0.355, obtained 0.35449836946096297 [absolute 0.0005] -- needs human review before any outreach
+2026-09-29T16:19:19Z [checkpoint] EX2 (EX2_exomiser_top3_frac): claimed 0.463, obtained 0.46019566468444273 [absolute 0.0005] -- needs human review before any outreach
+2026-09-29T16:19:19Z [checkpoint] EX3 (EX3_exomiser_top10_frac): claimed 0.585, obtained 0.5697295223479762 [absolute 0.0005] -- needs human review before any outreach
+2026-09-29T16:19:19Z [diff_claims] report.json validated against harness/schema/report.schema.json
+2026-09-29T16:19:19Z [diff_claims] wrote reports/reese-2026-exomiser/report.json
+2026-09-29T16:19:19Z [render_report] wrote reports/reese-2026-exomiser/report.md
+2026-09-29T16:19:19Z [run_all] done: reports/reese-2026-exomiser/report.json, reports/reese-2026-exomiser/report.md
+2026-09-29T16:19:19Z [compare] comparing clone reports against <repo>/reports/reese-2026-exomiser
+2026-09-29T16:19:19Z [compare] report.md: identical
+2026-09-29T16:19:19Z [compare] report.json: identical
+2026-09-29T16:19:19Z [compare] results.csv and per_case.tsv: DIFFER
+exit=0
+comparison=report.md: identical | report.json: identical | results.csv and per_case.tsv: DIFFER
+end=2026-09-29T16:19:19Z
 ```
 
-The masking functions and the diffs, run from the fresh clone with `<orig>` the path of this repository:
+The logged `[compare]` step only flags that `results.csv` and `per_case.tsv` differ; it does not show the
+diff. The following masking functions and diffs were run separately, after the logged script completed,
+from the fresh clone with `<repo>` the path of this repository, to show exactly what differs:
 
 ```
 mask() { sed -E -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:+.Z-]{5,}/TIMESTAMP/g' -e 's/^- Wall time: .*/- Wall time: WALL/' "$1"; }
 norm() { py -3 -c "import json,sys; d=json.load(open(sys.argv[1],encoding='utf-8')); d['generated_at']='X'; d['cost']['wall_minutes']=0; [p.update(fetched_at='X') for p in d['data_provenance']]; print(json.dumps(d,indent=2,sort_keys=True))" "$1"; }
-$ diff <(mask reports/reese-2026-exomiser/report.md) <(mask <orig>/reports/reese-2026-exomiser/report.md) && echo "reese-2026-exomiser: identical"
+$ diff <(mask reports/reese-2026-exomiser/report.md) <(mask <repo>/reports/reese-2026-exomiser/report.md) && echo "reese-2026-exomiser: identical"
 reese-2026-exomiser: identical
-$ diff <(norm reports/reese-2026-exomiser/report.json) <(norm <orig>/reports/reese-2026-exomiser/report.json) && echo "reese-2026-exomiser: report.json identical"
+$ diff <(norm reports/reese-2026-exomiser/report.json) <(norm <repo>/reports/reese-2026-exomiser/report.json) && echo "reese-2026-exomiser: report.json identical"
 reese-2026-exomiser: report.json identical
-$ cmp out/reese-2026-exomiser/per_case.tsv <orig>/out/reese-2026-exomiser/per_case.tsv && echo "per_case.tsv byte-identical"
+$ cmp out/reese-2026-exomiser/per_case.tsv <repo>/out/reese-2026-exomiser/per_case.tsv && echo "per_case.tsv byte-identical"
 per_case.tsv byte-identical
-$ diff out/reese-2026-exomiser/results.csv <orig>/out/reese-2026-exomiser/results.csv
+$ diff out/reese-2026-exomiser/results.csv <repo>/out/reese-2026-exomiser/results.csv
 27c27
 < exomiser_n_scored_pairs,79571
 ---
@@ -126,11 +135,14 @@ verification sample behind `minimal_scoring_check.md` and no claim value.
 
 ## Post-run mirror URI check
 
-Date: 2026-09-29 (UTC). A local clone of the commit that changed `mondo_semsql`'s uri to the published
-mirror release, with no `data/` present:
+Rerun 2026-09-29 (UTC), start 23:16:45, end 23:17:08. A local clone of the commit that changed
+`mondo_semsql`'s uri to the published mirror release, HEAD `82d6fa3c6332b90e3cfba20a19bc2dc3decf68a1`
+(`git rev-parse HEAD` in the clone), with no `data/` present:
 
 ```
-$ git clone <orig> <fresh_clone> && cd <repro-lab in the clone>
+$ git clone <repo> <clone> && cd <clone>
+$ git rev-parse HEAD
+82d6fa3c6332b90e3cfba20a19bc2dc3decf68a1
 $ ls data work 2>&1
 ls: cannot access 'data': No such file or directory
 ls: cannot access 'work': No such file or directory
@@ -142,10 +154,14 @@ verified download in the same clone (`py -3 harness/fetch_verify.py reese-2026-r
 in `reports/reese-2026-rescore/fresh_clone.md`):
 
 ```
+$ py -3 harness/fetch_verify.py reese-2026-rescore
+[fetch_verify] responses_zip: 9406802 bytes, sha256 OK
+[fetch_verify] gold_tsv: 474639 bytes, sha256 OK
 [fetch_verify] mondo_semsql: 242815274 bytes, sha256 OK
+[fetch_verify] opus_mondo_map: 406599 bytes, sha256 OK
 ```
 
-The `mondo_semsql` line of `work/reese-2026-rescore/provenance.json`:
+The full `mondo_semsql` entry of `work/reese-2026-rescore/provenance.json`, including `fetched_at`:
 
 ```json
 {
@@ -155,9 +171,17 @@ The `mondo_semsql` line of `work/reese-2026-rescore/provenance.json`:
   "sha256_expected": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
   "sha256_actual": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
   "bytes": 242815274,
+  "fetched_at": "2026-09-29T23:17:08.425+00:00",
   "verified": true
 }
 ```
 
-`diff` of the `uri`/`sha256`/`size_bytes` lines of this manifest's `mondo_semsql` entry against the rescore
-manifest's is empty, so the one verified download stands for both.
+```
+$ diff <(grep -A3 'id: mondo_semsql' targets/reese-2026-rescore/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:') \
+       <(grep -A3 'id: mondo_semsql' targets/reese-2026-exomiser/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:')
+$ echo $?  ->  0
+```
+
+The diff of the `uri`/`sha256`/`size_bytes` lines of this manifest's `mondo_semsql` entry against the
+rescore manifest's is empty, so the one verified download stands for both. The scratch clone was deleted
+after this check.

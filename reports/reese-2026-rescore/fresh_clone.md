@@ -84,11 +84,14 @@ because both Claude Opus 5.5 mapping tables failed their pre-registered gate.
 
 ## Post-run mirror URI check
 
-Date: 2026-09-29 (UTC). A local clone of the commit that changed `mondo_semsql`'s uri to the published
-mirror release, with no `data/` present:
+Rerun 2026-09-29 (UTC), start 23:16:45, end 23:17:08. A local clone of the commit that changed
+`mondo_semsql`'s uri to the published mirror release, HEAD `82d6fa3c6332b90e3cfba20a19bc2dc3decf68a1`
+(`git rev-parse HEAD` in the clone), with no `data/` present:
 
 ```
-$ git clone <orig> <fresh_clone> && cd <repro-lab in the clone>
+$ git clone <repo> <clone> && cd <clone>
+$ git rev-parse HEAD
+82d6fa3c6332b90e3cfba20a19bc2dc3decf68a1
 $ ls data work 2>&1
 ls: cannot access 'data': No such file or directory
 ls: cannot access 'work': No such file or directory
@@ -99,7 +102,7 @@ $ py -3 harness/fetch_verify.py reese-2026-rescore
 [fetch_verify] opus_mondo_map: 406599 bytes, sha256 OK
 ```
 
-The `mondo_semsql` line of `work/reese-2026-rescore/provenance.json`:
+The full `mondo_semsql` entry of `work/reese-2026-rescore/provenance.json`, including `fetched_at`:
 
 ```json
 {
@@ -109,10 +112,19 @@ The `mondo_semsql` line of `work/reese-2026-rescore/provenance.json`:
   "sha256_expected": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
   "sha256_actual": "499f7078e4b60434e812500db709c8f03d52722c0d5543397947101b04bbefb0",
   "bytes": 242815274,
+  "fetched_at": "2026-09-29T23:17:08.425+00:00",
   "verified": true
 }
 ```
 
 The Exomiser manifest's `mondo_semsql` entry was checked textually rather than re-fetched (its 19.3 GB and
-6.2 GB siblings make a second full download pointless): `diff` of the `uri`/`sha256`/`size_bytes` lines of
-both manifests' `mondo_semsql` entries is empty, so one verified download stands for both.
+6.2 GB siblings make a second full download pointless):
+
+```
+$ diff <(grep -A3 'id: mondo_semsql' targets/reese-2026-rescore/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:') \
+       <(grep -A3 'id: mondo_semsql' targets/reese-2026-exomiser/repro-target.yaml | grep -E 'uri:|sha256:|size_bytes:')
+$ echo $?  ->  0
+```
+
+The diff is empty, so one verified download stands for both. The scratch clone was deleted after this
+check.
