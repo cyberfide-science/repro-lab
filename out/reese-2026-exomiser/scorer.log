@@ -1,0 +1,3 @@
+[score] 5212 differentials, 33317173 items; ORPHA items mapped 9561751, unmapped 95037; example ORPHA:500545 -> MONDO:0044306
+[score] minimal scoring: 79548 (item, gold) pairs in 56.3 min
+[score] Exomiser top1/3/10 [1848, 2399, 2970] (opt [1965, 2506, 3074], pess [1842, 2399, 2967]); o1-preview subst top1 1101; over 5213

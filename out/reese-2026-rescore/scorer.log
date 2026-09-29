@@ -1,0 +1,10 @@
+[score_rescore] grounded 5212 responses with 32 workers
+BDB0210 caches/omim_mappings_cache.db: metadata page checksum error
+BDB0210 caches/score_grounded_result_cache.db: metadata page checksum error
+CacheInfo: hits=66694, misses=7611, maxsize=524288, currsize=7611
+CacheInfo: hits=24290, misses=6975, maxsize=524288, currsize=6975
+BDB0210 caches/omim_mappings_cache.db: metadata page checksum error
+BDB0210 caches/score_grounded_result_cache.db: metadata page checksum error
+CacheInfo: hits=26140, misses=103, maxsize=524288, currsize=7714
+CacheInfo: hits=30851, misses=414, maxsize=524288, currsize=7389
+[score_rescore] floor top1/3/10 [1051, 1381, 1550], subst top1/3/10 [1101, 1503, 1726], over 5213

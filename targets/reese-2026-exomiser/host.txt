@@ -1,0 +1,28 @@
+# Host description for the reese-2026-exomiser runs (2026-09-27)
+# Companion to env-resolved.txt (pip freeze of /opt/venv inside the image: malco's poetry.lock, unchanged,
+# identical to reese-2026-rescore's).
+
+Host OS:        Windows 11 Pro 10.0.26200
+Container host: Docker Desktop 4.89.0, Engine 29.7.2, platform linux/amd64
+Container kernel: Linux 6.6.87.2-microsoft-standard-WSL2 x86_64
+CPU:            AMD Ryzen 9 7950X 16-Core Processor (32 logical CPUs visible to Docker Desktop)
+RAM:            31 GB available to Docker Desktop; the stage runs with --memory 16g
+GPU:            none
+Base image:     python:3.12-slim @ sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f (Python 3.12.14)
+Java:           eclipse-temurin:17-jre @ sha256:34d6aaf0fa4ef553c470234ec23c32c7d5c0f370c2bd4b0bf8a16838052d85f0
+                (OpenJDK 17.0.20.1, Temurin-17.0.20.1+1), /opt/java/openjdk copied into the base image
+Image size:     14.8 GB
+
+Thread and hash settings (ENV in the Dockerfile):
+  OMP_NUM_THREADS=1  MKL_NUM_THREADS=1  OPENBLAS_NUM_THREADS=1  PYTHONHASHSEED=0  TQDM_DISABLE=1
+Exomiser: 4 JVMs at a time, -Xmx3g each, batches of 25 cases.
+
+Measured on this host (2026-09-27, outside the harness):
+  2406_phenotype.zip extracts to 12,793,597,686 B in 184 s; 2406_hg19.zip to 28,394,826,845 B in 699 s.
+  One case, JVM start included: 21.9 s, peak 3.7 GiB. One batch of 25: 269 s, peak 6.6 GiB (no -Xmx).
+  Four concurrent batches of 25 with -Xmx3g in --memory 16g: 100 cases in 387 s, peak 14.5 GiB.
+  All-genes JSON: about 100-290 MB per case.
+  Exomiser 14.0.1's scores are deterministic; the order of tied items is not (three runs of one case:
+  identical (disease_id, score) sets, different orders).
+
+Network: the scored container runs with --network none; run.sh prints "== network check: unreachable".

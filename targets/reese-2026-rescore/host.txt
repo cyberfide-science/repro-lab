@@ -1,0 +1,19 @@
+# Host description for the reese-2026-rescore runs (2026-09-27)
+# Companion to env-resolved.txt (pip freeze of /opt/venv inside the image: malco's poetry.lock, unchanged).
+
+Host OS:        Windows 11 Pro 10.0.26200
+Container host: Docker Desktop 4.89.0, Engine 29.7.2, platform linux/amd64
+Container kernel (uname -srm inside the image): Linux 6.6.87.2-microsoft-standard-WSL2 x86_64
+CPU:            AMD Ryzen 9 7950X 16-Core Processor (32 logical CPUs visible to Docker Desktop)
+RAM:            31 GB available to Docker Desktop
+GPU:            none (torch 2.6.0 from the lock is installed but no GPU is visible to the container)
+Base image:     python:3.12-slim @ sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f (Python 3.12.14)
+Image size:     14.4 GB (torch and its CUDA wheels are in malco's lock)
+
+Thread and hash settings (ENV in the Dockerfile):
+  OMP_NUM_THREADS=1  MKL_NUM_THREADS=1  OPENBLAS_NUM_THREADS=1  PYTHONHASHSEED=0  TQDM_DISABLE=1
+  PYTHONHASHSEED=0 matters here: perform_oak_grounding de-duplicates OAK hits through a set, so the order
+  of several Mondo IDs returned for one answer line, and hence item positions, follows the hash seed.
+
+Network: the scored container runs with --network none; run.sh prints "== network check: unreachable".
+Seeds: malco's grounding and scoring make no random calls.

@@ -41,7 +41,10 @@ for d in M["data"]:
         shutil.copyfile(d["uri"][len("file://"):], dest)
     else:
         urllib.request.urlretrieve(d["uri"], dest)
-    h = hashlib.sha256(open(dest, "rb").read()).hexdigest()
+    hs = hashlib.sha256()
+    with open(dest, "rb") as f:  # 1 MiB chunks, as in hash_data.py: multi-GB files never read whole
+        for block in iter(lambda: f.read(1 << 20), b""): hs.update(block)
+    h = hs.hexdigest()
     ok = h == d["sha256"]
     prov.append({"id": d["id"], "uri": d["uri"], "dest": dest,
                  "sha256_expected": d["sha256"], "sha256_actual": h,
